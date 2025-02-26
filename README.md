@@ -9,7 +9,7 @@ Supported platforms
 * Windows (later)
 * Ubuntu (later)
 
-![VPN Client Controller](https://raw.githubusercontent.com/VPNclient/VPNclient-controller-flutter/refs/heads/main/docs/assets/vpnclient_controller.jpeg)
+![VPN Client Controller](https://raw.githubusercontent.com/VPNclient/.github/refs/heads/main/assets/vpnclient_scheme2.png)
 
 ## Getting Started
 
