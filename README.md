@@ -9,6 +9,8 @@ Supported platforms
 * Windows (later)
 * Ubuntu (later)
 
+![VPN Client Controller](https://raw.githubusercontent.com/VPNclient/VPNclient-controller-flutter/refs/heads/main/docs/assets/vpnclient_controller.jpeg)
+
 ## Getting Started
 
 This project is a starting point for a Flutter application.
