@@ -1,4 +1,4 @@
-# vpnclient_controller_flutter
+# VPN Client Controller Flutter
 
 Flutter wrapper for VPN controller
 
