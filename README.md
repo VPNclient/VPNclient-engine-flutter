@@ -1,6 +1,15 @@
-# vpnclient_controller_flutter
+# VPN Client Controller Flutter
 
-A new Flutter project.
+Flutter wrapper for VPN controller
+
+Supported platforms
+* iOS 15+ (iPhone, iPad, MacOS M)
+* Android
+* MacOS Intel (later)
+* Windows (later)
+* Ubuntu (later)
+
+![VPN Client Controller](https://raw.githubusercontent.com/VPNclient/.github/refs/heads/main/assets/vpnclient_scheme2.png)
 
 ## Getting Started
 
