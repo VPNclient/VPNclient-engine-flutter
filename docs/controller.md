@@ -164,7 +164,3 @@ vpnController.onPingResult.listen((result) {
 ```
 
 ---
-
----
-
-This specification provides a clean, modular, and extensible interface for your VPN client application. Let me know if you need further refinements or additional details!
