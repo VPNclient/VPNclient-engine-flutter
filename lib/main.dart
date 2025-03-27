@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 
 enum ConnectionStatus { connecting, connected, disconnected, error }
 
@@ -79,6 +81,7 @@ class VPNclientEngine {
     print('Fetching subscription data from: $url');
 
     try {
+      //Сейчас при поднятом VPN обновление подписки пойдет через туннель. Позже необходимо реализовать разные механизмы обновления (только через туннель/только напрямую/комбинированный)
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode != 200) {
