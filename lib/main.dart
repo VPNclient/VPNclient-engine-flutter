@@ -1,6 +1,7 @@
 import 'dart:async';
-import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:http/http.dart' as http;
+import 'package:dart_ping/dart_ping.dart';
 
 
 enum ConnectionStatus { connecting, connected, disconnected, error }
