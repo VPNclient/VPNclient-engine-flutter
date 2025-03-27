@@ -1,4 +1,9 @@
+project '../../VPNclient-engine-ios/cntrlr.xcodeproj'
+platform :ios, '12.0'
+use_frameworks!
+
+
 target 'VPNclientEngineFlutter' do
   use_frameworks!
-  pod 'VPNclientEngineIOS', :path => '../VPNcleint-engine-ios'
+  pod 'VPNclientEngineIOS', :path => '../../VPNclient-engine-ios'
 end

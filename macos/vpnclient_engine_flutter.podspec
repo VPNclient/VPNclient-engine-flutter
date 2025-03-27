@@ -23,7 +23,7 @@ VPNclient Engine Flutter plugin project.
   # s.resource_bundles = {'vpnclient_engine_flutter_privacy' => ['Resources/PrivacyInfo.xcprivacy']}
 
   s.dependency 'FlutterMacOS'
-  s.dependency 'VPNclientEngineIOS', :path => '../VPNcleint-engine-ios'
+  s.dependency 'VPNclientEngineIOS', :path => '../VPNclient-engine-ios'
   
   s.platform = :osx, '10.11'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }

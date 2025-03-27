@@ -15,7 +15,7 @@ VPNclient Engine Flutter plugin project.
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
-  s.dependency 'VPNclientEngineIOS', :path => '../VPNcleint-engine-ios'
+  s.dependency 'VPNclientEngineIOS', :path => '../VPNclient-engine-ios'
   s.platform = :ios, '12.0'
 
   # Flutter.framework does not contain a i386 slice.
