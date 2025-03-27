@@ -1,6 +1,6 @@
 import 'dart:async';
 
-class Controller {
+class VPNengine {
   static String setTitle(int x) {
     switch (x) {
       case 1:
@@ -23,6 +23,6 @@ class Controller {
 }
 
 void main() async {
-  await Controller.connect();
-  await Controller.disconnect();
+  await VPNengine.connect();
+  await VPNengine.disconnect();
 }

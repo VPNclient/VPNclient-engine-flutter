@@ -1,9 +1,9 @@
-# 🚀 VPN Client Controller Flutter
+# 🚀 VPN Client Engine Flutter
 
 ## 🌍 Overview
 
-VPN Client Controller Flutter is a Flutter wrapper for managing VPN connections with an intuitive API. It provides seamless integration with various platforms, allowing developers to control VPN connections efficiently.
-![VPN Client Controller](https://raw.githubusercontent.com/VPNclient/.github/refs/heads/main/assets/vpnclient_scheme2.png)
+VPN Client Engine Flutter is a Flutter wrapper for managing VPN connections with an intuitive API. It provides seamless integration with various platforms, allowing developers to control VPN connections efficiently.
+![VPN Client Engine](https://raw.githubusercontent.com/VPNclient/.github/refs/heads/main/assets/vpnclient_scheme2.png)
 
 ### ✅ Supported Platforms
 - iOS 15+ (iPhone, iPad, MacOS M)
@@ -14,34 +14,34 @@ VPN Client Controller Flutter is a Flutter wrapper for managing VPN connections 
 
 ## 📥 Getting Started
 
-To start using VPN Client Controller Flutter, ensure you have Flutter installed and set up your project accordingly.
+To start using VPN Client Engine Flutter, ensure you have Flutter installed and set up your project accordingly.
 
 ### 📦 Installation
 ```sh
-flutter pub add vpnclient_controller
+flutter pub add vpnclient_engine
 ```
 
 ## 📌 Example Usage
 
 ```dart
-// Initialize the controller
-vpnController.initialize();
+// Initialize the Engine
+VPNengine.initialize();
 
 // Load subscription
-vpnController.loadSubscription(
+VPNengine.loadSubscription(
   subscriptionLink: "https://pastebin.com/raw/ZCYiJ98W"
 );
 
 // Connect to a VPN server
-vpnController.connect(index: 1);
+VPNengine.connect(index: 1);
 
 // Listen for connection status changes
-vpnController.onConnectionStatusChanged.listen((status) {
+VPNengine.onConnectionStatusChanged.listen((status) {
   print("Connection status: $status");
 });
 
 // Set routing rules
-vpnController.setRoutingRules(
+VPNengine.setRoutingRules(
   rules: [
     RoutingRule(appName: "YouTube", action: "routeThroughVPN"),
     RoutingRule(domain: "ads.com", action: "block"),
@@ -49,8 +49,8 @@ vpnController.setRoutingRules(
 );
 
 // Ping a server
-vpnController.pingServer(index: 1);
-vpnController.onPingResult.listen((result) {
+VPNengine.pingServer(index: 1);
+VPNengine.onPingResult.listen((result) {
   print("Ping result: ${result.latencyInMs} ms");
 });
 ```
@@ -60,7 +60,7 @@ vpnController.onPingResult.listen((result) {
 ## ⚙️ API Methods
 
 ### 🔹 1. initialize()
-Initializes the VPN controller. This should be called before using any other method.
+Initializes the VPN Engine. This should be called before using any other method.
 
 ### 🔹 2. connect({required int index})
 Connects to the specified VPN server.

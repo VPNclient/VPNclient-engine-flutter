@@ -1,6 +1,6 @@
 {
-    "name": "vpnclient_controller_flutter",
-    "short_name": "vpnclient_controller_flutter",
+    "name": "vpnclient_engine_flutter",
+    "short_name": "vpnclient_engine_flutter",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#0175C2",
