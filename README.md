@@ -24,35 +24,44 @@ flutter pub add vpnclient_engine_flutter
 ## 📌 Example Usage
 
 ```dart
-// Initialize the Engine
-VPNclientEngine.initialize();
+  // Initialize the Engine
+  VPNclientEngine.initialize();
 
-// Load subscription
-VPNclientEngine.loadSubscriptions(
-  subscriptionLinks: ["https://pastebin.com/raw/ZCYiJ98W"]
-);
+  // Clear subscriptions
+  VPNclientEngine.ClearSubscriptions();
 
-// Connect to a VPN server
-VPNclientEngine.connect(index: 1);
+  // Add subscription
+  VPNclientEngine.addSubscription(subscriptionURL: ["https://pastebin.com/raw/ZCYiJ98W"]);
 
-// Listen for connection status changes
-VPNclientEngine.onConnectionStatusChanged.listen((status) {
-  print("Connection status: $status");
-});
+  // Update subscription
+  await VPNclientEngine.updateSubscription(subscriptionIndex: 0);
 
-// Set routing rules
-VPNclientEngine.setRoutingRules(
-  rules: [
-    RoutingRule(appName: "YouTube", action: "routeThroughVPN"),
-    RoutingRule(domain: "ads.com", action: "block"),
-  ],
-);
+  // Listen for connection status changes
+  VPNclientEngine.onConnectionStatusChanged.listen((status) {
+    print("Connection status: $status");
+  });
 
-// Ping a server
-VPNclientEngine.pingServer(index: 1);
-VPNclientEngine.onPingResult.listen((result) {
-  print("Ping result: ${result.latencyInMs} ms");
-});
+  await VPNclientEngine.connect(subscriptionIndex: 0, serverIndex: 1);
+
+  // Set routing rules
+  VPNclientEngine.setRoutingRules(
+    rules: [
+      RoutingRule(appName: "YouTube", action: "proxy"),
+      RoutingRule(appName: "google.com", action: "direct"),
+      RoutingRule(domain: "ads.com", action: "block"),
+    ],
+  );
+
+  // Ping a server
+  VPNclientEngine.pingServer(subscriptionIndex: 0, index: 1);
+
+  VPNclientEngine.onPingResult.listen((result) {
+    print("Ping result: ${result.latencyInMs} ms");
+  });
+
+  await Future.delayed(Duration(seconds: 10));
+
+  await VPNclientEngine.disconnect();
 ```
 
 ---
