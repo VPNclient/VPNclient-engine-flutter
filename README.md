@@ -180,6 +180,17 @@ Enum: `invalidCredentials`, `serverUnavailable`, `subscriptionExpired`, `unknown
 
 ---
 
+## Flutter
+
+[plug-in package](https://flutter.dev/to/develop-plugins),
+a specialized package that includes platform-specific implementation code for
+Android and/or iOS.
+
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.
+
+
 ## 🤝 Contributing
 
 Contributions are welcome! Feel free to submit issues and pull requests.
@@ -187,4 +198,5 @@ Contributions are welcome! Feel free to submit issues and pull requests.
 ## 📜 License
 
 This project is licensed under ...
+
 
