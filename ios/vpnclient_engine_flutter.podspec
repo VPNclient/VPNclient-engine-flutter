@@ -5,16 +5,17 @@
 Pod::Spec.new do |s|
   s.name             = 'vpnclient_engine_flutter'
   s.version          = '0.0.1'
-  s.summary          = 'A new Flutter plugin project.'
+  s.summary          = 'VPNclient Engine Flutter plugin project.'
   s.description      = <<-DESC
-A new Flutter plugin project.
+VPNclient Engine Flutter plugin project.
                        DESC
-  s.homepage         = 'http://example.com'
+  s.homepage         = 'http://vpnclient.click'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.author           = { 'Your Company' => 'admin@nativemind.net' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.dependency 'Flutter'
+  s.dependency 'VPNclientEngineIOS', :path => '../VPNcleint-engine-ios'
   s.platform = :ios, '12.0'
 
   # Flutter.framework does not contain a i386 slice.
