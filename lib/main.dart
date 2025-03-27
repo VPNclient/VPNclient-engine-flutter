@@ -1,4 +1,17 @@
 import 'dart:async';
+enum ConnectionStatus { connecting, connected, disconnected, error }
+
+class SessionStatistics {
+  final Duration sessionDuration;
+  final int dataInBytes;
+  final int dataOutBytes;
+
+  SessionStatistics({
+    required this.sessionDuration,
+    required this.dataInBytes,
+    required this.dataOutBytes,
+  });
+}
 
 class VPNclientEngine {
   static String setTitle(int x) {

@@ -28,8 +28,8 @@ flutter pub add vpnclient_engine_flutter
 VPNclientEngine.initialize();
 
 // Load subscription
-VPNclientEngine.loadSubscription(
-  subscriptionLink: "https://pastebin.com/raw/ZCYiJ98W"
+VPNclientEngine.loadSubscriptions(
+  subscriptionLinks: ["https://pastebin.com/raw/ZCYiJ98W"]
 );
 
 // Connect to a VPN server
@@ -62,9 +62,9 @@ VPNclientEngine.onPingResult.listen((result) {
 ### 🔹 1. initialize()
 Initializes the VPN Client Engine. This should be called before using any other method.
 
-### 🔹 2. connect({required int index})
+### 🔹 2. connect({required int subscriptionIndex,required int serverIndex})
 Connects to the specified VPN server.
-- `index`: Index of the server from `getServerList()`.
+- `index`: Index of the server from `getServerList()`.s
 
 ### 🔹 3. disconnect()
 Disconnects the active VPN connection.
@@ -84,9 +84,9 @@ Pings a specific server to check latency.
 Configures routing rules for apps or domains.
 - `rules`: List of routing rules (e.g., route YouTube traffic through VPN, block ads.com).
 
-### 🔹 8. loadSubscription({required String subscriptionLink})
-Loads a VPN subscription from the provided link.
-- `subscriptionLink`: The subscription file URL.
+### 🔹 8. loadSubscriptions({required List<String> subscriptionLinks})
+Loads VPN subscriptions from the provided list of links.
+- `subscriptionLinks`:  A list of subscription file URLs.
 
 ### 🔹 9. getSessionStatistics()
 Returns statistics for the current VPN session (e.g., data usage, session duration).
