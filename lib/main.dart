@@ -118,7 +118,8 @@ void main() async {
   VPNclientEngine.ClearSubscriptions();
 
   // Add subscription
-  VPNclientEngine.addSubscription(subscriptionURL: ["https://pastebin.com/raw/ZCYiJ98W"]);
+  VPNclientEngine.addSubscription(subscriptionURL: "https://pastebin.com/raw/ZCYiJ98W");
+  //VPNclientEngine.addSubscriptions(subscriptionURLs: ["https://pastebin.com/raw/ZCYiJ98W"]);
 
   // Update subscription
   await VPNclientEngine.updateSubscription(subscriptionIndex: 0);
