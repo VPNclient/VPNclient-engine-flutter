@@ -13,6 +13,19 @@ class SessionStatistics {
   });
 }
 
+class RoutingRule {
+  final String? appName;
+  final String? domain;
+  final String action; // proxy, direct, block
+
+  RoutingRule({this.appName, this.domain, required this.action});
+}
+
+class PingResult {
+  final int latencyInMs;
+  PingResult(this.latencyInMs);
+}
+
 class VPNclientEngine {
   static String setTitle(int x) {
     switch (x) {
@@ -24,14 +37,76 @@ class VPNclientEngine {
     return 'Hello from backend!';
   }
 
-  static Future<void> connect() async {
-    print('Команда на подключение отправлена');
+
+  static final StreamController<ConnectionStatus> _connectionStatusController =
+      StreamController<ConnectionStatus>.broadcast();
+  static final StreamController<PingResult> _pingResultController =
+      StreamController<PingResult>.broadcast();
+
+  static List<String> _subscriptions = [];
+
+
+  static void initialize() {
+    print('VPNclient Engine initialized');
+  }
+
+  static void ClearSubscriptions() {
+    _subscriptions.clear();
+    print('All subscriptions cleared');
+  }
+
+  static void addSubscription({required String subscriptionURL}) {
+    _subscriptions.add(subscriptionURL);
+    print('Subscription added: $subscriptionURL');
+  }
+
+  static void addSubscriptions({required List<String> subscriptionURLs}) {
+    _subscriptions.addAll(subscriptionURLs);
+    print('Subscriptions added: ${subscriptionURLs.join(", ")}');
+  }
+
+  static Future<void> updateSubscription({required int subscriptionIndex}) async {
+    if (subscriptionIndex < 0 || subscriptionIndex >= _subscriptions.length) {
+      print('Invalid subscription index');
+      return;
+    }
+    print('Updating subscription at index $subscriptionIndex');
+    await Future.delayed(Duration(seconds: 3));
+    print('Subscription updated successfully');
+  }
+
+  static Stream<ConnectionStatus> get onConnectionStatusChanged => _connectionStatusController.stream;
+  static Stream<PingResult> get onPingResult => _pingResultController.stream;
+
+  static Future<void> connect({required int subscriptionIndex, required int serverIndex}) async {
+    print('Connecting to subscription $subscriptionIndex, server $serverIndex...');
+    _connectionStatusController.add(ConnectionStatus.connecting);
     await Future.delayed(Duration(seconds: 5));
-    print('Успешное подключение');
+    _connectionStatusController.add(ConnectionStatus.connected);
+    print('Successfully connected');
   }
 
   static Future<void> disconnect() async {
-    print('Успешное отключение');
+    _connectionStatusController.add(ConnectionStatus.disconnected);
+    print('Disconnected successfully');
+  }
+
+  static void setRoutingRules({required List<RoutingRule> rules}) {
+    for (var rule in rules) {
+      if (rule.appName != null) {
+        print('Routing rule for app ${rule.appName}: ${rule.action}');
+      } else if (rule.domain != null) {
+        print('Routing rule for domain ${rule.domain}: ${rule.action}');
+      }
+    }
+  }
+
+  static void pingServer({required int subscriptionIndex, required int index}) async {
+    print('Pinging server at subscription $subscriptionIndex, server index $index...');
+    await Future.delayed(Duration(seconds: 1));
+    final result = PingResult(123);
+    _pingResultController.add(result);
+    print('Ping result: ${result.latencyInMs} ms');
   }
 }
 
