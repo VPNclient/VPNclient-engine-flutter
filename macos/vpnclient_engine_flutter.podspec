@@ -5,13 +5,13 @@
 Pod::Spec.new do |s|
   s.name             = 'vpnclient_engine_flutter'
   s.version          = '0.0.1'
-  s.summary          = 'A new Flutter plugin project.'
+  s.summary          = 'VPNclient Engine Flutter plugin project.'
   s.description      = <<-DESC
-A new Flutter plugin project.
+VPNclient Engine Flutter plugin project.
                        DESC
-  s.homepage         = 'http://example.com'
+  s.homepage         = 'http://vpnclient.click'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.author           = { 'Your Company' => 'admin@nativemind.net' }
 
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
@@ -23,7 +23,8 @@ A new Flutter plugin project.
   # s.resource_bundles = {'vpnclient_engine_flutter_privacy' => ['Resources/PrivacyInfo.xcprivacy']}
 
   s.dependency 'FlutterMacOS'
-
+  s.dependency 'VPNclientEngineIOS', :path => '../VPNcleint-engine-ios'
+  
   s.platform = :osx, '10.11'
   s.pod_target_xcconfig = { 'DEFINES_MODULE' => 'YES' }
   s.swift_version = '5.0'
