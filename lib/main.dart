@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:http/http.dart' as http;
+
 enum ConnectionStatus { connecting, connected, disconnected, error }
 
 class SessionStatistics {
@@ -27,6 +29,8 @@ class PingResult {
 }
 
 class VPNclientEngine {
+  static List<List<String>> _subscriptionServers = [];
+
   static String setTitle(int x) {
     switch (x) {
       case 1:
@@ -70,9 +74,47 @@ class VPNclientEngine {
       print('Invalid subscription index');
       return;
     }
-    print('Updating subscription at index $subscriptionIndex');
-    await Future.delayed(Duration(seconds: 3));
-    print('Subscription updated successfully');
+
+    final url = _subscriptions[subscriptionIndex];
+    print('Fetching subscription data from: $url');
+
+    try {
+      final response = await http.get(Uri.parse(url));
+
+      if (response.statusCode != 200) {
+        print('Failed to fetch subscription: HTTP ${response.statusCode}');
+        return;
+      }
+
+      final content = response.body.trim();
+
+      List<String> servers = [];
+
+      if (content.startsWith('[')) {
+        // JSON format
+        final jsonList = jsonDecode(content) as List<dynamic>;
+        for (var server in jsonList) {
+          servers.add(server.toString());
+        }
+        print('Parsed JSON subscription: ${servers.length} servers loaded');
+      } else {
+        // NEWLINE format
+        servers = content.split('\n').where((line) => line.trim().isNotEmpty).toList();
+        print('Parsed NEWLINE subscription: ${servers.length} servers loaded');
+      }
+
+      // Ensure the servers list matches the subscriptions list size
+      while (_subscriptionServers.length <= subscriptionIndex) {
+        _subscriptionServers.add([]);
+      }
+
+      // Save fetched servers to specific subscription index
+      _subscriptionServers[subscriptionIndex] = servers;
+
+      print('Subscription #$subscriptionIndex servers updated successfully');
+    } catch (e) {
+      print('Error updating subscription: $e');
+    }
   }
 
   static Stream<ConnectionStatus> get onConnectionStatusChanged => _connectionStatusController.stream;
@@ -149,7 +191,7 @@ void main() async {
   });
 
   await Future.delayed(Duration(seconds: 10));
-  
+
   //Disconnect
   await VPNclientEngine.disconnect();
 }
