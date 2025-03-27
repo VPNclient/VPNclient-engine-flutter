@@ -18,30 +18,30 @@ To start using VPN Client Engine Flutter, ensure you have Flutter installed and 
 
 ### 📦 Installation
 ```sh
-flutter pub add vpnclient_engine
+flutter pub add vpnclient_engine_flutter
 ```
 
 ## 📌 Example Usage
 
 ```dart
 // Initialize the Engine
-VPNengine.initialize();
+VPNclientEngine.initialize();
 
 // Load subscription
-VPNengine.loadSubscription(
+VPNclientEngine.loadSubscription(
   subscriptionLink: "https://pastebin.com/raw/ZCYiJ98W"
 );
 
 // Connect to a VPN server
-VPNengine.connect(index: 1);
+VPNclientEngine.connect(index: 1);
 
 // Listen for connection status changes
-VPNengine.onConnectionStatusChanged.listen((status) {
+VPNclientEngine.onConnectionStatusChanged.listen((status) {
   print("Connection status: $status");
 });
 
 // Set routing rules
-VPNengine.setRoutingRules(
+VPNclientEngine.setRoutingRules(
   rules: [
     RoutingRule(appName: "YouTube", action: "routeThroughVPN"),
     RoutingRule(domain: "ads.com", action: "block"),
@@ -49,8 +49,8 @@ VPNengine.setRoutingRules(
 );
 
 // Ping a server
-VPNengine.pingServer(index: 1);
-VPNengine.onPingResult.listen((result) {
+VPNclientEngine.pingServer(index: 1);
+VPNclientEngine.onPingResult.listen((result) {
   print("Ping result: ${result.latencyInMs} ms");
 });
 ```
@@ -60,7 +60,7 @@ VPNengine.onPingResult.listen((result) {
 ## ⚙️ API Methods
 
 ### 🔹 1. initialize()
-Initializes the VPN Engine. This should be called before using any other method.
+Initializes the VPN Client Engine. This should be called before using any other method.
 
 ### 🔹 2. connect({required int index})
 Connects to the specified VPN server.
