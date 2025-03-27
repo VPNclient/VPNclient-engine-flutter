@@ -147,11 +147,36 @@ class VPNclientEngine {
   }
 
   static void pingServer({required int subscriptionIndex, required int index}) async {
-    print('Pinging server at subscription $subscriptionIndex, server index $index...');
-    await Future.delayed(Duration(seconds: 1));
-    final result = PingResult(123);
-    _pingResultController.add(result);
-    print('Ping result: ${result.latencyInMs} ms');
+    if (subscriptionIndex < 0 || subscriptionIndex >= _subscriptionServers.length) {
+      print('Invalid subscription index');
+      return;
+    }
+
+    if (index < 0 || index >= _subscriptionServers[subscriptionIndex].length) {
+      print('Invalid server index');
+      return;
+    }
+
+    final serverAddress = _subscriptionServers[subscriptionIndex][index];
+    print('Pinging server: $serverAddress');
+
+    try {
+      final ping = Ping(serverAddress, count: 3);
+      final pingData = await ping.stream.firstWhere((data) => data.response != null);
+
+      if (pingData.response != null) {
+        final latency = pingData.response!.time!.inMilliseconds;
+        final result = PingResult(latency);
+        _pingResultController.add(result);
+        print('Ping result: ${result.latencyInMs} ms');
+      } else {
+        print('Ping failed: No response');
+        _pingResultController.add(PingResult(-1)); // Indicate error with -1
+      }
+    } catch (e) {
+      print('Ping error: $e');
+      _pingResultController.add(PingResult(-1));
+    }
   }
 }
 
