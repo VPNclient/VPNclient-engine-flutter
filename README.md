@@ -31,7 +31,8 @@ flutter pub add vpnclient_engine_flutter
   VPNclientEngine.ClearSubscriptions();
 
   // Add subscription
-  VPNclientEngine.addSubscription(subscriptionURL: ["https://pastebin.com/raw/ZCYiJ98W"]);
+  VPNclientEngine.addSubscription(subscriptionURL: "https://pastebin.com/raw/ZCYiJ98W");
+  //VPNclientEngine.addSubscriptions(subscriptionURLs: ["https://pastebin.com/raw/ZCYiJ98W"]);
 
   // Update subscription
   await VPNclientEngine.updateSubscription(subscriptionIndex: 0);
@@ -41,6 +42,7 @@ flutter pub add vpnclient_engine_flutter
     print("Connection status: $status");
   });
 
+  //Connect to server 1
   await VPNclientEngine.connect(subscriptionIndex: 0, serverIndex: 1);
 
   // Set routing rules
@@ -61,6 +63,7 @@ flutter pub add vpnclient_engine_flutter
 
   await Future.delayed(Duration(seconds: 10));
 
+  //Disconnect
   await VPNclientEngine.disconnect();
 ```
 

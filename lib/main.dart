@@ -129,6 +129,7 @@ void main() async {
     print("Connection status: $status");
   });
 
+  //Connect to server 1
   await VPNclientEngine.connect(subscriptionIndex: 0, serverIndex: 1);
 
   // Set routing rules
@@ -148,6 +149,7 @@ void main() async {
   });
 
   await Future.delayed(Duration(seconds: 10));
-
+  
+  //Disconnect
   await VPNclientEngine.disconnect();
 }
