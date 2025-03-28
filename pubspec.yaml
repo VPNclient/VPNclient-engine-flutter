@@ -24,14 +24,14 @@ platforms:
         git:
           url: https://github.com/VPNclient/VPNclient-engine-android.git
           ref: main
-          #path: path/to/module
+          path: .
   ios:
     dependencies:
       vpnclient_engine_ios:
         git:
           url: https://github.com/VPNclient/VPNclient-engine-ios.git
           ref: main
-          #path: path/to/module
+          path: .
 
 dev_dependencies:
   flutter_test:
