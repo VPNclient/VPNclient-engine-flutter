@@ -1,4 +1,4 @@
 rootProject.name = 'vpnclient_engine_flutter'
 
 include ':vpnclient_engine_android'
-project(':vpnclient_engine_android').projectDir = new File('../VPNclient_engine_android')
+project(':vpnclient_engine_android').projectDir = new File('../../VPNclient_engine_android')
