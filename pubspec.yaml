@@ -16,6 +16,22 @@ dependencies:
   plugin_platform_interface: ^2.0.2
   cupertino_icons: ^1.0.8
   dart_ping: ^9.0.1
+  
+platforms:
+  android:
+    dependencies:
+      vpnclient_engine_android:
+        git:
+          url: https://github.com/VPNclient/VPNclient-engine-android.git
+          ref: main
+          #path: path/to/module
+  ios:
+    dependencies:
+      vpnclient_engine_ios:
+        git:
+          url: https://github.com/VPNclient/VPNclient-engine-ios.git
+          ref: main
+          #path: path/to/module
 
 dev_dependencies:
   flutter_test:
