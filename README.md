@@ -8,9 +8,9 @@ VPN Client Engine Flutter is a Flutter wrapper for managing VPN connections with
 ### ✅ Supported Platforms
 - iOS 15+ (iPhone, iPad, MacOS M)
 - Android
-- 🏗️ MacOS Intel (coming soon)
-- 🏗️ Windows (coming soon)
-- 🏗️ Ubuntu (coming soon)
+- 🏗️ MacOS Intel
+- 🏗️ Windows
+- 🏗️ Ubuntu
 
 ## 📥 Getting Started
 
