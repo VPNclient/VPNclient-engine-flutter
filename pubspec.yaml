@@ -22,9 +22,9 @@ platforms:
     dependencies:
       vpnclient_engine_android:
         git:
-          url: https://github.com/VPNclient/VPNclient-engine-android.git
+          url: https://github.com/VPNclient/VPNclient-engine.git
           ref: main
-          path: .
+          path: android/
   ios:
     dependencies:
       vpnclient_engine_ios:
@@ -32,6 +32,13 @@ platforms:
           url: https://github.com/VPNclient/VPNclient-engine-ios.git
           ref: main
           path: .
+  windows:
+    dependencies:
+      vpnclient_engine_windows:
+        git:
+          url: https://github.com/VPNclient/VPNclient-engine.git
+          ref: main
+          path: windows/
 
 dev_dependencies:
   flutter_test:
