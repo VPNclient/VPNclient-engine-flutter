@@ -5,6 +5,23 @@
 VPN Client Engine Flutter is a Flutter Plugin for managing VPN connections with an intuitive API. It provides seamless integration with various platforms, allowing developers to control VPN connections efficiently.
 ![VPN Client Engine](https://raw.githubusercontent.com/VPNclient/.github/refs/heads/main/assets/vpnclient_scheme2.png)
 
+
+
+## 🏗️ Architecture Overview
+
+```mermaid
+graph TD
+  style A fill:#f9d5e5
+  A[VPNclient App] --> B[VPNclient Engine Flutter Plugin]
+  style B fill:#eeac99
+  B --> C[VPNclient Engine]
+  C --> D[iOS]
+  C --> E[Android]
+  C --> F[macOS]
+  C --> G[Windows]
+  C --> H[Linux]
+```
+
 ### ✅ Supported Platforms
 - iOS 15+ (iPhone, iPad, MacOS M)
 - Android
