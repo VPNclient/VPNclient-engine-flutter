@@ -29,10 +29,21 @@ platforms:
   ios:
     dependencies:
       vpnclient_engine_ios:
-        git:
-          url: https://github.com/VPNclient/VPNclient-engine-ios.git
-          ref: main
-          path: .
+        path: ../VPNclient-engine-ios
+#        git:
+#          url: https://github.com/VPNclient/VPNclient-engine-ios.git
+#          ref: main
+#          path: .
+
+  macos:
+    dependencies:
+      vpnclient_engine_macos:
+        path: ../VPNclient-engine-ios
+#        git:
+#          url: https://github.com/VPNclient/VPNclient-engine-ios.git
+#          ref: main
+#          path: .
+
   windows:
     dependencies:
       vpnclient_engine_windows:
