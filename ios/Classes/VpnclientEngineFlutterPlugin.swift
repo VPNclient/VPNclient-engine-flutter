@@ -1,6 +1,7 @@
 import Flutter
 import UIKit
-// import VPNclientEngineIOS
+import VPNclientTunnel
+import VPNclientEngine
 
 public class VpnclientEngineFlutterPlugin: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {
