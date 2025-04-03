@@ -3,4 +3,5 @@ project '../../VPNclient-engine-ios/cntrlr.xcodeproj'
 target 'Runner' do
   use_frameworks!
   pod 'VPNclientEngineIOS', :path => '../../VPNclient-engine-ios'
+#  pod 'cntrlr', :path => '../../VPNclient-engine-ios'
 end

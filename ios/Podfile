@@ -4,6 +4,6 @@ use_frameworks!
 
 
 target 'VPNclientEngineFlutter' do
-  use_frameworks!
-  pod 'VPNclientEngineIOS', :path => '../../VPNclient-engine-ios'
+#  use_frameworks!
+#  pod 'VPNclientEngineIOS', :path => '../../VPNclient-engine-ios'
 end
