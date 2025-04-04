@@ -14,4 +14,12 @@ class MethodChannelVpnclientEngineFlutter extends VpnclientEngineFlutterPlatform
     final version = await methodChannel.invokeMethod<String>('getPlatformVersion');
     return version;
   }
+
+  Future<void> startVPN(String configPath) =>
+      methodChannel.invokeMethod('startVPN', {"config": configPath});
+
+  Future<void> stopVPN() => methodChannel.invokeMethod('stopVPN');
+
+  Future<String> getStatus() =>
+      methodChannel.invokeMethod('status').then((value) => value.toString());
 }
