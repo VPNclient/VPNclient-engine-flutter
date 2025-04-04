@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:dart_ping/dart_ping.dart';
-
+import 'package:vpnclient_engine_flutter/vpnclient_engine_flutter_platform_interface.dart';
 
 enum ConnectionStatus { connecting, connected, disconnected, error }
 
@@ -125,8 +125,13 @@ class VPNclientEngine {
   static Stream<PingResult> get onPingResult => _pingResultController.stream;
 
   static Future<void> connect({required int subscriptionIndex, required int serverIndex}) async {
+    print(await VpnclientEngineFlutterPlatform.instance.getPlatformVersion());
+
     print('Connecting to subscription $subscriptionIndex, server $serverIndex...');
     _connectionStatusController.add(ConnectionStatus.connecting);
+
+    print(await VpnclientEngineFlutterPlatform.instance.getPlatformVersion());
+
     await Future.delayed(Duration(seconds: 5));
     _connectionStatusController.add(ConnectionStatus.connected);
     print('Successfully connected');

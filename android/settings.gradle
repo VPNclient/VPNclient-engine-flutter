@@ -1,4 +1,12 @@
 rootProject.name = 'vpnclient_engine_flutter'
 
-include ':vpnclient_engine_android'
-project(':vpnclient_engine_android').projectDir = new File('../../VPNclient_engine_android')
+//include ':vpnclient_engine_android'
+//project(':vpnclient_engine_android').projectDir = new File('../../VPNclient_engine_android')
+
+//def targetPath = new File(settingsDir, '../../VPNclient-engine/android')
+//println "[DEBUG55] Expected project dir: ${targetPath.absolutePath}"
+
+
+//include ':vpnclient-engine-android'
+//project(':vpnclient-engine-android').projectDir = new File('../../../VPNclient-engine/android')
+//project(':vpnclient-engine-android').projectDir = new File('/Users/anton/proj/VPNclient/VPNclient-engine/android')

@@ -19,6 +19,7 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        //maven { url 'https://jitpack.io' }
     }
 }
 
@@ -52,6 +53,7 @@ android {
         testImplementation("org.jetbrains.kotlin:kotlin-test")
         testImplementation("org.mockito:mockito-core:5.0.0")
         //implementation project(':vpnclient-engine-android')
+        //implementation 'com.github.VPNclient:VPNclient-engine:android-v0.1.1'
     }
 
     testOptions {
