@@ -1,33 +1,69 @@
-# 🚀 VPN Client Engine Flutter
+# VPN Client Engine Flutter (Flutter Plugin)
 
-## 🌍 Overview
+**VPNclient Engine Flutter** is a Flutter plugin that provides a high-level API for controlling VPN connections from a Dart/Flutter app. It wraps the native [VPNclient Engine](https://github.com/VPNclient/VPNclient-engine) library, allowing Flutter developers to integrate advanced VPN functionality into their apps with ease. With this plugin, you can start and stop VPN connections, switch servers, apply routing rules, and listen to connection events using simple Dart calls, without worrying about platform-specific implementation details.
 
-VPN Client Engine Flutter is a Flutter Plugin for managing VPN connections with an intuitive API. It provides seamless integration with various platforms, allowing developers to control VPN connections efficiently.
-![VPN Client Engine](https://raw.githubusercontent.com/VPNclient/.github/refs/heads/main/assets/vpnclient_scheme2.png)
+## 🚀 Key Features
+- **Seamless Integration:** The plugin is built to be cross-platform. It uses platform-specific binaries and code (written in C++ and integrated via Dart FFI) to interface with iOS, Android, Windows, macOS, and Linux, but exposes a unified Dart interface. This means you write your VPN logic once in Dart and it works everywhere Flutter does.
+- **Intuitive API:** The API is designed with Flutter developers in mind. You can initialize the VPN engine, connect to a server, and listen for status changes using streams and futures. The plugin handles asynchronous calls and background threads internally.
+- **Powered by VPNclient Engine:** Under the hood, this plugin utilizes the native VPNclient Engine, which supports multiple protocols (Xray/VMess/VLESS/Reality, WireGuard, OpenVPN, etc.) and drivers. The plugin abstracts the complexity, so you can, for example, simply call `connect()` and the engine will take care of setting up a tun interface or proxy as needed on that platform.
+
+## 🖥️ Supported Platforms
+
+- ✅ iOS (15.0+)
+- ✅ Android (5.0+) 
+- ✅ macOS (Intel/Silicon)
+- ✅ Windows  
+- ✅ Unix (Linux/Debian/Ubuntu)
 
 
+Each platform uses the native capabilities provided by VPNclient Engine:
+- On Android and iOS, the engine uses the system VPN APIs (VpnService, NetworkExtension) to create a VPN tunnel.
+- On desktop, it can either create a TUN interface or run as a local proxy (depending on driver configuration).
 
-## 🏗️ Architecture Overview
+## 📦 Architecture
+
+Internally, the plugin acts as a bridge between Dart and the native engine. It uses a combination of Dart FFI (Foreign Function Interface) and platform-specific setup to communicate with the native library. The basic flow:
 
 ```mermaid
-graph TD
-  style A fill:#f9d5e5
-  A[VPNclient App] --> B[VPNclient Engine Flutter Plugin]
-  style B fill:#eeac99
-  B --> C[VPNclient Engine]
-  C --> D[iOS]
-  C --> E[Android]
-  C --> F[macOS]
-  C --> G[Windows]
-  C --> H[Linux]
+flowchart LR
+ subgraph subGraph0["Flutter Application"]
+        UI@{ label: "Your Flutter App (<span style=\"color:\">Flutter UI)</span>" }
+  end
+ subgraph subGraph1["Flutter Plugin"]
+        Plugin["VPNclient Engine Flutter"]
+  end
+ subgraph subGraph2["Native Core"]
+        Core["VPNclient Engine Library"]
+  end
+    UI --> Plugin
+    Plugin --> Core
+    Core --> iOS["iOS"] & Android["Android"] & macOS["macOS"] & Windows["Windows"] & Linux["Linux"]
+
+    UI@{ shape: rect}
 ```
 
-### ✅ Supported Platforms
-- iOS 15+ (iPhone, iPad, MacOS M)
-- Android
-- 🏗️ MacOS Intel
-- 🏗️ Windows
-- 🏗️ Ubuntu
+*Diagram: Your Flutter app calls into the VPNclient Engine Flutter plugin (Dart layer). The plugin calls the native VPNclient Engine, which interfaces with the OS networking on each platform.* 
+
+From a developer perspective, you primarily interact with the **Dart API** provided by this plugin. The plugin takes care of invoking native methods and ensures asynchronous operations (like connecting or disconnecting) do not block the UI thread.
+
+## Platform Setup
+
+Because this plugin sets up actual VPN tunnels, a few platform-specific configurations are required:
+
+- **Android:** No special code is needed (the plugin internally uses Android's `VpnService`), but you must declare the following in your app’s AndroidManifest.xml:
+  ```xml
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  ```
+  These ensure the app can open network connections and run a foreground service for the VPN. The plugin will handle launching the VPN service. (Note: You do **not** need to declare `BIND_VPN_SERVICE` in the manifest; the plugin uses the VpnService class which has that intent filter built-in.)
+  
+- **iOS:** Enable the Personal VPN capability for your app target in Xcode (this adds the necessary entitlements). Additionally, in your Info.plist, you might need to include a usage description for VPN if required. The VPNclient Engine uses a custom bundle identifier for its network extension (`click.vpnclient.engine` with an `allow-vpn` key), but if you integrate via this plugin, typically enabling the capability is sufficient. When you run the app the first time, iOS will prompt the user to allow the VPN configuration.
+  
+- **Windows:** The app should be run with administrator privileges to create a TUN interface via WinTun. Alternatively, have the WinTun driver installed (which is usually present if WireGuard is installed on the system). No manifest changes are needed, but the user might need to approve driver installation if not already present.
+  
+- **macOS/Linux:** The application will likely require root privileges or proper entitlements to create a tunnel (on macOS, Network Extension needs to be signed with the correct entitlements; on Linux, either run with root or configure `/dev/net/tun` access for the user). For development on macOS, you can enable "Network Extensions" in the sandbox if running unsigned.
+
+Once the above are set up, you can use the plugin in your Dart code as shown below.
 
 ## 📥 Getting Started
 
@@ -72,10 +108,9 @@ flutter pub add vpnclient_engine_flutter
   );
 
   // Ping a server
-  VPNclientEngine.pingServer(subscriptionIndex: 0, index: 1);
-
+  VPNclientEngine.ping(subscriptionIndex: 0, index: 1);
   VPNclientEngine.onPingResult.listen((result) {
-    print("Ping result: ${result.latencyInMs} ms");
+    print("Ping: sub=${result.subscriptionIndex}, server=${result.serverIndex}, latency=${result.latencyInMs} ms");
   });
 
   await Future.delayed(Duration(seconds: 10));
