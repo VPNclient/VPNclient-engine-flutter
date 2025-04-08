@@ -1,6 +1,6 @@
 # VPN Client Engine Flutter (Flutter Plugin)
 
-**VPNclient Engine Flutter** is a Flutter plugin that provides a high-level API for controlling VPN connections from a Dart/Flutter app. It wraps the native [VPNclient Engine](#vpnclient-engine) library, allowing Flutter developers to integrate advanced VPN functionality into their apps with ease. With this plugin, you can start and stop VPN connections, switch servers, apply routing rules, and listen to connection events using simple Dart calls, without worrying about platform-specific implementation details.
+**VPNclient Engine Flutter** is a Flutter plugin that provides a high-level API for controlling VPN connections from a Dart/Flutter app. It wraps the native [VPNclient Engine](https://github.com/VPNclient/VPNclient-engine) library, allowing Flutter developers to integrate advanced VPN functionality into their apps with ease. With this plugin, you can start and stop VPN connections, switch servers, apply routing rules, and listen to connection events using simple Dart calls, without worrying about platform-specific implementation details.
 
 ## 🚀 Key Features
 - **Seamless Integration:** The plugin is built to be cross-platform. It uses platform-specific binaries and code (written in C++ and integrated via Dart FFI) to interface with iOS, Android, Windows, macOS, and Linux, but exposes a unified Dart interface. This means you write your VPN logic once in Dart and it works everywhere Flutter does.
