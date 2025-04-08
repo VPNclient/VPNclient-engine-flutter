@@ -46,6 +46,25 @@ flowchart LR
 
 From a developer perspective, you primarily interact with the **Dart API** provided by this plugin. The plugin takes care of invoking native methods and ensures asynchronous operations (like connecting or disconnecting) do not block the UI thread.
 
+## Platform Setup
+
+Because this plugin sets up actual VPN tunnels, a few platform-specific configurations are required:
+
+- **Android:** No special code is needed (the plugin internally uses Android's `VpnService`), but you must declare the following in your app’s AndroidManifest.xml:
+  ```xml
+  <uses-permission android:name="android.permission.INTERNET" />
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+  ```
+  These ensure the app can open network connections and run a foreground service for the VPN. The plugin will handle launching the VPN service. (Note: You do **not** need to declare `BIND_VPN_SERVICE` in the manifest; the plugin uses the VpnService class which has that intent filter built-in.)
+  
+- **iOS:** Enable the Personal VPN capability for your app target in Xcode (this adds the necessary entitlements). Additionally, in your Info.plist, you might need to include a usage description for VPN if required. The VPNclient Engine uses a custom bundle identifier for its network extension (`click.vpnclient.engine` with an `allow-vpn` key), but if you integrate via this plugin, typically enabling the capability is sufficient. When you run the app the first time, iOS will prompt the user to allow the VPN configuration.
+  
+- **Windows:** The app should be run with administrator privileges to create a TUN interface via WinTun. Alternatively, have the WinTun driver installed (which is usually present if WireGuard is installed on the system). No manifest changes are needed, but the user might need to approve driver installation if not already present.
+  
+- **macOS/Linux:** The application will likely require root privileges or proper entitlements to create a tunnel (on macOS, Network Extension needs to be signed with the correct entitlements; on Linux, either run with root or configure `/dev/net/tun` access for the user). For development on macOS, you can enable "Network Extensions" in the sandbox if running unsigned.
+
+Once the above are set up, you can use the plugin in your Dart code as shown below.
+
 ## 📥 Getting Started
 
 To start using VPN Client Engine Flutter, ensure you have Flutter installed and set up your project accordingly.
