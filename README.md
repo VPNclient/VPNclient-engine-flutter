@@ -72,11 +72,8 @@ flutter pub add vpnclient_engine_flutter
   );
 
   // Ping a server
-  VPNclientEngine.pingServer(subscriptionIndex: 0, index: 1);
-
-  VPNclientEngine.onPingResult.listen((result) {
-    print("Ping result: ${result.latencyInMs} ms");
-  });
+  final result = await VPNclientEngine.ping(subscriptionIndex: 0, index: 1);
+  print("Ping result: ${result.latencyInMs} ms");
 
   await Future.delayed(Duration(seconds: 10));
 
