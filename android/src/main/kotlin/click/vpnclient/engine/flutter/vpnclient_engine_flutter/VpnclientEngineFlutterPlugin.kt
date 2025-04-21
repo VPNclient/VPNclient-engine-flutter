@@ -6,7 +6,7 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 
-import click.vpnclient.engine.VPNManager
+//import click.vpnclient.engine.VPNManager
 
 /** VpnclientEngineFlutterPlugin */
 class VpnclientEngineFlutterPlugin: FlutterPlugin, MethodCallHandler {
@@ -25,14 +25,15 @@ class VpnclientEngineFlutterPlugin: FlutterPlugin, MethodCallHandler {
     when (call.method) {
         "startVPN" -> {
             val config = call.argument<String>("config") ?: return result.error("NO_CONFIG", "Missing config", null)
-            val success = VPNManager.startVPN(context, config)
-            result.success(success)
-        }
-        "stopVPN" -> {
-            VPNManager.stopVPN()
+            //val success = VPNManager.startVPN(context, config)
+            //result.success(success)
             result.success(null)
         }
-        "status" -> result.success(VPNManager.status())
+        "stopVPN" -> {
+            //VPNManager.stopVPN()
+            result.success(null)
+        }
+        //"status" -> result.success(VPNManager.status())
     }
     if (call.method == "getPlatformVersion") {
       result.success("Android ${android.os.Build.VERSION.RELEASE}")
