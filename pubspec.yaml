@@ -17,6 +17,7 @@ dependencies:
   cupertino_icons: ^1.0.8
   dart_ping: ^9.0.1
   http: ^1.3.0
+  flutter_v2ray: ^1.0.10
   
 platforms:
   android:
