@@ -4,6 +4,19 @@ import 'package:http/http.dart' as http;
 import 'package:dart_ping/dart_ping.dart';
 import 'package:vpnclient_engine_flutter/vpnclient_engine_flutter_platform_interface.dart';
 
+///
+import 'package:flutter_v2ray/flutter_v2ray.dart';
+
+///
+
+final FlutterV2ray flutterV2ray = FlutterV2ray(
+  onStatusChanged: (status) {
+    // do something
+  },
+);
+
+///
+
 enum ConnectionStatus { connecting, connected, disconnected, error }
 
 class SessionStatistics {
@@ -125,6 +138,52 @@ class VPNclientEngine {
   static Stream<PingResult> get onPingResult => _pingResultController.stream;
 
   static Future<void> connect({required int subscriptionIndex, required int serverIndex}) async {
+
+
+      ///
+      // You must initialize V2Ray before using it.
+      print('Initializing...');
+      await flutterV2ray.initializeV2Ray();
+
+      // v2ray share link like vmess://, vless://, ...
+      String link =
+          //"vless://c61daf3e-83ff-424f-a4ff-5bfcb46f0b30@5.35.98.91:8443?encryption=none&flow=&security=reality&sni=yandex.ru&fp=chrome&pbk=rLCmXWNVoRBiknloDUsbNS5ONjiI70v-BWQpWq0HCQ0&sid=108108108108#%F0%9F%87%B7%F0%9F%87%BA+%F0%9F%99%8F+Russia+%231";
+          "vless://c61daf3e-83ff-424f-a4ff-5bfcb46f0b30@45.77.190.146:8443?encryption=none&flow=&security=reality&sni=www.gstatic.com&fp=chrome&pbk=rLCmXWNVoRBiknloDUsbNS5ONjiI70v-BWQpWq0HCQ0&sid=108108108108#%F0%9F%87%BA%F0%9F%87%B8+%F0%9F%99%8F+USA+%231";
+      V2RayURL parser = FlutterV2ray.parseFromURL(link);
+
+      // Get Server Delay
+      //print(
+      //  '${flutterV2ray.getServerDelay(config: parser.getFullConfiguration())}ms',
+      //  name: 'ServerDelay',
+      //);
+
+      // Permission is not required if you using proxy only
+      print('Premissions...');
+      if (await flutterV2ray.requestPermission()) {
+        print('Starting...');
+        flutterV2ray.startV2Ray(
+          remark: parser.remark,
+          // The use of parser.getFullConfiguration() is not mandatory,
+          // and you can enter the desired V2Ray configuration in JSON format
+          config: parser.getFullConfiguration(),
+          blockedApps: null,
+          bypassSubnets: null,
+          proxyOnly: false,
+        );
+        print('Started');
+      }
+
+      // Disconnect
+      ///flutterV2ray.stopV2Ray();
+
+      ///
+
+      //TODO:move to right place
+
+
+    
+    
+    
     print(await VpnclientEngineFlutterPlatform.instance.getPlatformVersion());
 
     print('Connecting to subscription $subscriptionIndex, server $serverIndex...');
