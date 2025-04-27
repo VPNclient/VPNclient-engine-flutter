@@ -1,24 +1,28 @@
-# VPN Client Engine Flutter (Flutter Plugin)
+# VPN Client Engine Flutter Plugin
 
-**VPNclient Engine Flutter** is a Flutter plugin that provides a high-level API for controlling VPN connections from a Dart/Flutter app. It wraps the native [VPNclient Engine](https://github.com/VPNclient/VPNclient-engine) library, allowing Flutter developers to integrate advanced VPN functionality into their apps with ease. With this plugin, you can start and stop VPN connections, switch servers, apply routing rules, and listen to connection events using simple Dart calls, without worrying about platform-specific implementation details.
+**VPN Client Engine Flutter** is a Flutter plugin that offers a high-level Dart API for managing VPN connections, making it easy to integrate advanced VPN functionality into Flutter apps. It abstracts the complexities of working with different VPN protocols and drivers, providing a unified interface for developers. The plugin supports multiple VPN protocols, including V2Ray and WireGuard, allowing you to choose the best technology for your needs.
 
 ## 🚀 Key Features
-- **Seamless Integration:** The plugin is built to be cross-platform. It uses platform-specific binaries and code (written in C++ and integrated via Dart FFI) to interface with iOS, Android, Windows, macOS, and Linux, but exposes a unified Dart interface. This means you write your VPN logic once in Dart and it works everywhere Flutter does.
-- **Intuitive API:** The API is designed with Flutter developers in mind. You can initialize the VPN engine, connect to a server, and listen for status changes using streams and futures. The plugin handles asynchronous calls and background threads internally.
-- **Powered by VPNclient Engine:** Under the hood, this plugin utilizes the native VPNclient Engine, which supports multiple protocols (Xray/VMess/VLESS/Reality, WireGuard, OpenVPN, etc.) and drivers. The plugin abstracts the complexity, so you can, for example, simply call `connect()` and the engine will take care of setting up a tun interface or proxy as needed on that platform.
+-   **Cross-Platform Compatibility:** Built to work seamlessly across iOS, Android, Windows, macOS, and Linux, offering a consistent Dart interface that hides platform-specific code.
+-   **Intuitive Dart API:** Provides a simple, easy-to-use Dart interface for initializing the VPN engine, connecting/disconnecting, managing subscriptions, and listening for events via streams and futures.
+-   **Protocol Agnostic:** The core logic is abstracted to support multiple VPN protocols. Currently supports **V2Ray** and **WireGuard**.
+-   **Unified Core Management**: Offers the ability to choose between different cores(now supports **V2RayCore** and **WireGuardCore**) via the `VpnCore` interface, allowing developers to select the VPN technology that best suits their application requirements.
+-   **Powered by `flutter_v2ray`:** Utilizes the `flutter_v2ray` plugin to manage the core VPN functionality, ensuring a robust and efficient implementation for both **V2Ray** and **WireGuard**.
+-   **Seamless Integration with Native APIs:** Leverages platform-specific VPN APIs like `VpnService` on Android and `NetworkExtension` on iOS, ensuring optimal performance and security.
 
 ## 🖥️ Supported Platforms
 
-- ✅ iOS (15.0+)
-- ✅ Android (5.0+) 
-- ✅ macOS (Intel/Silicon)
-- ✅ Windows  
-- ✅ Unix (Linux/Debian/Ubuntu)
+-   ✅ iOS (15.0+)
+-   ✅ Android (5.0+)
+-   ✅ macOS (Intel/Silicon)
+-   ✅ Windows
+-   ✅ Unix (Linux/Debian/Ubuntu)
 
 
-Each platform uses the native capabilities provided by VPNclient Engine:
-- On Android and iOS, the engine uses the system VPN APIs (VpnService, NetworkExtension) to create a VPN tunnel.
-- On desktop, it can either create a TUN interface or run as a local proxy (depending on driver configuration).
+Each platform leverages native capabilities for VPN functionality:
+
+-   **Android and iOS:** Employs system VPN APIs (`VpnService`, `NetworkExtension`) for creating a secure VPN tunnel.
+-   **Desktop (Windows, macOS, Linux):** Can establish a TUN interface or operate as a local proxy, configurable based on the chosen driver.
 
 ## 📦 Architecture
 

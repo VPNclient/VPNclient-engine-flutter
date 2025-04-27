@@ -2,32 +2,107 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:dart_ping/dart_ping.dart';
-import 'package:vpnclient_engine_flutter/vpnclient_engine_flutter_platform_interface.dart';
+import 'package:rxdart/rxdart.dart';
+import 'package:vpnclient_engine_flutter/vpnclient_engine_flutter.dart';
+import 'package:vpnclient_engine_flutter/vpnclient_engine/core.dart';
 
-///
-import 'package:flutter_v2ray/flutter_v2ray.dart';
 
-///
 
-final FlutterV2ray flutterV2ray = FlutterV2ray(
-  onStatusChanged: (status) {
-    // do something
-  },
-);
+enum ConnectionStatus {
+  connecting,
+  connected,
+  disconnected,
+  error,
+}
 
-///
+enum ErrorCode {
+  invalidCredentials,
+  serverUnavailable,
+  subscriptionExpired,
+  unknownError,
+}
 
-enum ConnectionStatus { connecting, connected, disconnected, error }
+enum ProxyType {
+  socks5,
+  http,
+}
+
+enum Action {
+  block,
+  allow,
+  routeThroughVPN,
+  direct,
+  proxy,
+}
+
+class Server {
+  final String address;
+  final int? latency;
+  final String? location;
+  final bool? isPreferred;
+
+  Server({
+    required this.address,
+    this.latency,
+    this.location,
+    this.isPreferred,
+  });
+}
+
+class SubscriptionDetails {
+  final DateTime? expiryDate;
+  final int? dataLimit;
+  final int? usedData;
+
+  SubscriptionDetails({
+    this.expiryDate,
+    this.dataLimit,
+    this.usedData,
+  });
+}
 
 class SessionStatistics {
-  final Duration sessionDuration;
+  final Duration? sessionDuration;
   final int dataInBytes;
   final int dataOutBytes;
 
   SessionStatistics({
-    required this.sessionDuration,
+    this.sessionDuration,
     required this.dataInBytes,
     required this.dataOutBytes,
+  });
+}
+
+class ErrorDetails {
+  final ErrorCode errorCode;
+  final String errorMessage;
+
+  ErrorDetails({required this.errorCode, required this.errorMessage});
+}
+
+class ProxyConfig {
+  final ProxyType type;
+  final String address;
+  final int port;
+  final String? credentials;
+
+  ProxyConfig({
+    required this.type,
+    required this.address,
+    required this.port,
+    this.credentials,
+  });
+}
+
+class PingResult {
+  final int subscriptionIndex;
+  final int serverIndex;
+  final int latencyInMs;
+
+  PingResult({
+    required this.subscriptionIndex,
+    required this.serverIndex,
+    required this.latencyInMs,
   });
 }
 
@@ -39,35 +114,59 @@ class RoutingRule {
   RoutingRule({this.appName, this.domain, required this.action});
 }
 
-class PingResult {
-  final int latencyInMs;
-  PingResult(this.latencyInMs);
-}
+
+
 
 class VPNclientEngine {
   static List<List<String>> _subscriptionServers = [];
+  static Map<int, ServerConnection> _connections = {};
+  static List<String> _subscriptions = [];
 
-  static String setTitle(int x) {
-    switch (x) {
-      case 1:
-        return 'Super HIT';
-      case 2:
-        return 'VPNClient';
-    }
-    return 'Hello from backend!';
+
+
+  static final _connectionStatusSubject = BehaviorSubject<ConnectionStatus>();
+  static Stream<ConnectionStatus> get onConnectionStatusChanged => _connectionStatusSubject.stream;
+
+  static final _errorSubject = BehaviorSubject<ErrorDetails>();
+  static Stream<ErrorDetails> get onError => _errorSubject.stream;
+
+  static final _serverSwitchedSubject = BehaviorSubject<String>();
+  static Stream<String> get onServerSwitched => _serverSwitchedSubject.stream;
+
+  static final _pingResultSubject = BehaviorSubject<PingResult>();
+  static Stream<PingResult> get onPingResult => _pingResultSubject.stream;
+
+  static final _subscriptionLoadedSubject = BehaviorSubject<SubscriptionDetails>();
+  static Stream<SubscriptionDetails> get onSubscriptionLoaded => _subscriptionLoadedSubject.stream;
+
+  static final _dataUsageUpdatedSubject = BehaviorSubject<SessionStatistics>();
+  static Stream<SessionStatistics> get onDataUsageUpdated => _dataUsageUpdatedSubject.stream;
+
+  static final _routingRulesAppliedSubject = BehaviorSubject<List<RoutingRule>>();
+  static Stream<List<RoutingRule>> get onRoutingRulesApplied => _routingRulesAppliedSubject.stream;
+
+  static final _killSwitchTriggeredSubject = BehaviorSubject<void>();
+  static Stream<void> get onKillSwitchTriggered => _killSwitchTriggeredSubject.stream;
+
+  static VpnCore _vpnCore = V2RayCore();
+  
+
+
+  static void _emitError(ErrorCode code, String message) {
+    _errorSubject.add(ErrorDetails(errorCode: code, errorMessage: message));
   }
 
-
-  static final StreamController<ConnectionStatus> _connectionStatusController =
-      StreamController<ConnectionStatus>.broadcast();
-  static final StreamController<PingResult> _pingResultController =
-      StreamController<PingResult>.broadcast();
+  
 
   static List<String> _subscriptions = [];
 
 
   static void initialize() {
     print('VPNclient Engine initialized');
+    if (_vpnCore == null) {
+      // Default core is V2Ray
+      _vpnCore = V2RayCore();
+    }
   }
 
   static void ClearSubscriptions() {
@@ -127,79 +226,52 @@ class VPNclientEngine {
 
       // Save fetched servers to specific subscription index
       _subscriptionServers[subscriptionIndex] = servers;
+      _subscriptionLoadedSubject.add(SubscriptionDetails());
 
       print('Subscription #$subscriptionIndex servers updated successfully');
     } catch (e) {
       print('Error updating subscription: $e');
+      _emitError(ErrorCode.unknownError, 'Error updating subscription: $e');
     }
   }
 
-  static Stream<ConnectionStatus> get onConnectionStatusChanged => _connectionStatusController.stream;
-  static Stream<PingResult> get onPingResult => _pingResultController.stream;
-
-  static Future<void> connect({required int subscriptionIndex, required int serverIndex}) async {
-
-
-      ///
-      // You must initialize V2Ray before using it.
-      print('Initializing...');
-      await flutterV2ray.initializeV2Ray();
-
-      // v2ray share link like vmess://, vless://, ...
-      String link =
-          //"vless://c61daf3e-83ff-424f-a4ff-5bfcb46f0b30@5.35.98.91:8443?encryption=none&flow=&security=reality&sni=yandex.ru&fp=chrome&pbk=rLCmXWNVoRBiknloDUsbNS5ONjiI70v-BWQpWq0HCQ0&sid=108108108108#%F0%9F%87%B7%F0%9F%87%BA+%F0%9F%99%8F+Russia+%231";
-          "vless://c61daf3e-83ff-424f-a4ff-5bfcb46f0b30@45.77.190.146:8443?encryption=none&flow=&security=reality&sni=www.gstatic.com&fp=chrome&pbk=rLCmXWNVoRBiknloDUsbNS5ONjiI70v-BWQpWq0HCQ0&sid=108108108108#%F0%9F%87%BA%F0%9F%87%B8+%F0%9F%99%8F+USA+%231";
-      V2RayURL parser = FlutterV2ray.parseFromURL(link);
-
-      // Get Server Delay
-      //print(
-      //  '${flutterV2ray.getServerDelay(config: parser.getFullConfiguration())}ms',
-      //  name: 'ServerDelay',
-      //);
-
-      // Permission is not required if you using proxy only
-      print('Premissions...');
-      if (await flutterV2ray.requestPermission()) {
-        print('Starting...');
-        flutterV2ray.startV2Ray(
-          remark: parser.remark,
-          // The use of parser.getFullConfiguration() is not mandatory,
-          // and you can enter the desired V2Ray configuration in JSON format
-          config: parser.getFullConfiguration(),
-          blockedApps: null,
-          bypassSubnets: null,
-          proxyOnly: false,
-        );
-        print('Started');
-      }
-
-      // Disconnect
-      ///flutterV2ray.stopV2Ray();
-
-      ///
-
-      //TODO:move to right place
-
-
+  static Future<void> connect({
+    required int subscriptionIndex,
+    required int serverIndex,
+    ProxyConfig? proxyConfig,
+  }) async {
+    final url = _subscriptionServers[subscriptionIndex][serverIndex];
     
-    
-    
-    print(await VpnclientEngineFlutterPlatform.instance.getPlatformVersion());
+    if (url.startsWith('vless://') || url.startsWith('vmess://') || url.startsWith('v2ray://')) {
+        _vpnCore = V2RayCore();
+    } else if (url.startsWith('wg://')) {
+        _vpnCore = WireGuardCore();
+    } else if (url.startsWith('openvpn://') || url.endsWith('.ovpn')) {
+        _vpnCore = OpenVPNCore();
+    } else {
+        _emitError(ErrorCode.unknownError, 'Unsupported URL format');
+        return;
+    }
+    if (serverIndex < 0 || serverIndex >= _subscriptionServers[subscriptionIndex].length) {
+      _emitError(ErrorCode.unknownError, 'Invalid server index');
+      return;
+    }
 
-    print('Connecting to subscription $subscriptionIndex, server $serverIndex...');
-    _connectionStatusController.add(ConnectionStatus.connecting);
-
-    print(await VpnclientEngineFlutterPlatform.instance.getPlatformVersion());
-
-    await Future.delayed(Duration(seconds: 5));
-    _connectionStatusController.add(ConnectionStatus.connected);
-    print('Successfully connected');
+    await _vpnCore.connect(Server(address: _subscriptionServers[subscriptionIndex][serverIndex]), proxyConfig);
   }
 
+  
   static Future<void> disconnect() async {
-    _connectionStatusController.add(ConnectionStatus.disconnected);
-    print('Disconnected successfully');
+    if (_vpnCore == null) {
+      _emitError(ErrorCode.unknownError, 'VPN core is not initialized.');
+      return;
+    }
+
+    await _vpnCore!.disconnect();
+    
+
   }
+
 
   static void setRoutingRules({required List<RoutingRule> rules}) {
     for (var rule in rules) {
@@ -216,31 +288,70 @@ class VPNclientEngine {
       print('Invalid subscription index');
       return;
     }
-
     if (index < 0 || index >= _subscriptionServers[subscriptionIndex].length) {
       print('Invalid server index');
       return;
     }
-
     final serverAddress = _subscriptionServers[subscriptionIndex][index];
     print('Pinging server: $serverAddress');
-
+    
     try {
       final ping = Ping(serverAddress, count: 3);
       final pingData = await ping.stream.firstWhere((data) => data.response != null);
-
       if (pingData.response != null) {
         final latency = pingData.response!.time!.inMilliseconds;
-        final result = PingResult(latency);
-        _pingResultController.add(result);
-        print('Ping result: ${result.latencyInMs} ms');
+        final result = PingResult(subscriptionIndex: subscriptionIndex, serverIndex: index, latencyInMs: latency);
+        _pingResultSubject.add(result);
+        print('Ping result: sub=${result.subscriptionIndex}, server=${result.serverIndex}, latency=${result.latencyInMs} ms');
       } else {
         print('Ping failed: No response');
-        _pingResultController.add(PingResult(-1)); // Indicate error with -1
+        _pingResultSubject.add(PingResult(subscriptionIndex: subscriptionIndex, serverIndex: index, latencyInMs: -1)); // Indicate error with -1
       }
     } catch (e) {
       print('Ping error: $e');
-      _pingResultController.add(PingResult(-1));
+      _pingResultSubject.add(PingResult(subscriptionIndex: subscriptionIndex, serverIndex: index, latencyInMs: -1));
     }
   }
+
+  static String getConnectionStatus() {
+    //  enum ConnectionStatus { connecting, connected, disconnected, error }
+    return 'disconnected';
+  }
+
+  static List<Server> getServerList() {
+    //TODO:
+    //Fetches the list of available VPN servers.
+    return [
+      Server(address: 'server1.com', latency: 50, location: 'USA', isPreferred: true),
+      Server(address: 'server2.com', latency: 100, location: 'UK', isPreferred: false),
+      Server(address: 'server3.com', latency: 75, location: 'Canada', isPreferred: false),
+    ];
+  }
+
+  static Future<void> loadSubscriptions({required List<String> subscriptionLinks}) async {
+    print('loadSubscriptions: ${subscriptionLinks.join(", ")}');
+    _subscriptions.addAll(subscriptionLinks);
+    for (var element in subscriptionLinks) {
+        addSubscription(subscriptionURL: element);
+        await updateSubscription(subscriptionIndex: _subscriptions.indexOf(element));
+      }
+  }
+
+  static SessionStatistics getSessionStatistics() {
+    //TODO:
+    return SessionStatistics(
+      sessionDuration: Duration(minutes: 30),
+      dataInBytes: 1024 * 1024 * 100, // 100MB
+      dataOutBytes: 1024 * 1024 * 50, // 50MB
+    );
+  }
+
+  static void setAutoConnect({required bool enable}) {
+    print('setAutoConnect: $enable');
+  }
+
+  static void setKillSwitch({required bool enable}) {
+    print('setKillSwitch: $enable');
+  }
+
 }

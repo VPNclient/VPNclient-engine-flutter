@@ -1,0 +1,49 @@
+name: Publish Flutter Plugin
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.16.0' # or specify latest stable
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze code
+        run: flutter analyze
+
+      - name: Format code
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Update version
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0)
+          VERSION=${LATEST_TAG#v}
+          sed -i "s/version:.*/version: $VERSION/" pubspec.yaml
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git add pubspec.yaml
+          git commit -m "chore: update version to $VERSION"
+          git push
+
+      - name: Run tests
+        run: flutter test
+
+      - name: Publish plugin
+        run: flutter pub publish --force
+        env:
+          PUB_HOSTED_URL: https://pub.dartlang.org
+          PUB_TOKEN: ${{ secrets.PUB_TOKEN }}
