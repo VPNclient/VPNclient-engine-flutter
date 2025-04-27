@@ -1,25 +1,34 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-
 import 'vpnclient_engine_flutter_platform_interface.dart';
 
-/// An implementation of [VpnclientEngineFlutterPlatform] that uses method channels.
-class MethodChannelVpnclientEngineFlutter extends VpnclientEngineFlutterPlatform {
-  /// The method channel used to interact with the native platform.
+class VpnclientEngineFlutterMethodChannel
+    extends VpnclientEngineFlutterPlatform {
   @visibleForTesting
   final methodChannel = const MethodChannel('vpnclient_engine_flutter');
 
   @override
-  Future<String?> getPlatformVersion() async {
-    final version = await methodChannel.invokeMethod<String>('getPlatformVersion');
-    return version;
+  Future<void> startVPN({required String configPath}) async {
+    try {
+      await methodChannel.invokeMethod('startVPN', {"config": configPath});
+    } catch (e) {
+      debugPrint('Error starting VPN: $e');
+      rethrow;
+    }
   }
 
-  Future<void> startVPN(String configPath) =>
-      methodChannel.invokeMethod('startVPN', {"config": configPath});
-
-  Future<void> stopVPN() => methodChannel.invokeMethod('stopVPN');
-
-  Future<String> getStatus() =>
-      methodChannel.invokeMethod('status').then((value) => value.toString());
+  @override
+  Future<void> stopVPN() async {
+    try {
+      await methodChannel.invokeMethod('stopVPN');
+    } catch (e) {
+      debugPrint('Error stopping VPN: $e');
+      rethrow;
+    }
+  }
+  @override
+  Future<String> checkVPNStatus() async {
+    final result = await methodChannel.invokeMethod('status');
+    return result.toString();
+  }
 }
