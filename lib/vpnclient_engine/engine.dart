@@ -6,6 +6,7 @@ import 'package:vpnclient_engine_flutter/vpnclient_engine/server_connection.dart
 import 'package:flutter/foundation.dart';
 import 'package:flutter_v2ray/flutter_v2ray.dart';
 import 'package:rxdart/rxdart.dart';
+import 'package:vpnclient_engine_flutter/vpnclient_engine_flutter.dart';
 
 
 enum ConnectionStatus {
@@ -112,7 +113,7 @@ class RoutingRule {
   final String action; // proxy, direct, block
 
   RoutingRule({this.appName, this.domain, required this.action});
-  
+
 }
 
 
@@ -122,6 +123,7 @@ final FlutterV2ray flutterV2ray = FlutterV2ray(
     onStatusChanged: (status) {
       print("status changed: $status");
     },
+
   );
 class VPNclientEngine {
   static List<List<String>> _subscriptionServers = [];
@@ -234,72 +236,50 @@ class VPNclientEngine {
   }
 
   static Future<void> connect({required int subscriptionIndex, required int serverIndex}) async {
-      print('Connecting to subscription $subscriptionIndex, server $serverIndex...');
+    print('Connecting to subscription $subscriptionIndex, server $serverIndex...');
 
-      if (subscriptionIndex < 0 || subscriptionIndex >= _subscriptionServers.length) {
-        _emitError(ErrorCode.unknownError, 'Invalid subscription index');
-        return;
-      }
+    if (subscriptionIndex < 0 || subscriptionIndex >= _subscriptionServers.length) {
+      _emitError(ErrorCode.unknownError, 'Invalid subscription index');
+      return;
+    }
 
-      if (serverIndex < 0 || serverIndex >= _subscriptionServers[subscriptionIndex].length) {
-        _emitError(ErrorCode.unknownError, 'Invalid server index');
-        return;
-      }
+    if (serverIndex < 0 || serverIndex >= _subscriptionServers[subscriptionIndex].length) {
+      _emitError(ErrorCode.unknownError, 'Invalid server index');
+      return;
+    }
 
-      _connectionStatusSubject.add(ConnectionStatus.connecting);
-
-      // You must initialize V2Ray before using it.
-      await flutterV2ray.initializeV2Ray();
-      
-
-      //Get server info
-      String link = _subscriptionServers[subscriptionIndex][serverIndex];
-      V2RayURL parser = FlutterV2ray.parseFromURL(link);
-
-      
-
-      // Permission is not required if you using proxy only
-      if (!(await flutterV2ray.requestPermission())) {
-        _connectionStatusSubject.add(ConnectionStatus.error);
-        _emitError(ErrorCode.unknownError, 'Permission not granted');
-        return;
-      }
-
-      flutterV2ray.startV2Ray(
-        remark: parser.remark,
-        // The use of parser.getFullConfiguration() is not mandatory,
-        // and you can enter the desired V2Ray configuration in JSON format
-        config: parser.getFullConfiguration(),
-        blockedApps: null,
-        bypassSubnets: null,
-        proxyOnly: false,
-      );
-
-
-      _connections[subscriptionIndex] = ServerConnection(
-          subscriptionIndex: subscriptionIndex,
-          serverIndex: serverIndex,
-          connectionStatus: ConnectionStatus.connected,
-          serverAddress: _subscriptionServers[subscriptionIndex][serverIndex],
-          connectedAt: DateTime.now(),
-      );
-
+    _connectionStatusSubject.add(ConnectionStatus.connecting);
+    VpnclientEngineFlutterPlatform.instance.connect(subscriptionIndex: subscriptionIndex, serverIndex: serverIndex).then((_) {
       _connectionStatusSubject.add(ConnectionStatus.connected);
-      _serverSwitchedSubject.add(parser.remark ?? "null");
-      
-      print('Successfully connected');
-      
+    }).catchError((error) {
+      _connectionStatusSubject.add(ConnectionStatus.error);
+      _emitError(ErrorCode.unknownError, 'Error on connect: $error');
+    });
+
+    //Get server info
+    String link = _subscriptionServers[subscriptionIndex][serverIndex];
+    V2RayURL parser = FlutterV2ray.parseFromURL(link);
+    _serverSwitchedSubject.add(parser.remark ?? "null");
+
+    print('Connecting to server: $link');
   }
 
   static Future<void> disconnect() async {
     print('Disconnecting...');
-    
+
     if(_connections.isEmpty){
       print('Noting to disconnect.');
       _connectionStatusSubject.add(ConnectionStatus.disconnected);
       return;
     }
-
+    
+    VpnclientEngineFlutterPlatform.instance.disconnect().then((_) {
+      _connectionStatusSubject.add(ConnectionStatus.disconnected);
+    }).catchError((error) {
+      _connectionStatusSubject.add(ConnectionStatus.error);
+      _emitError(ErrorCode.unknownError, 'Error on disconnect: $error');
+    });
+/*
     try {
         
         await flutterV2ray.stopV2Ray();
@@ -310,8 +290,8 @@ class VPNclientEngine {
         _connectionStatusSubject.add(ConnectionStatus.error);
         _emitError(ErrorCode.unknownError, 'Error disconnecting: $e');
         print('Error disconnecting: $e');
-    }
-
+    }*/
+    
     print('Disconnected successfully');
   }
 
@@ -337,13 +317,14 @@ class VPNclientEngine {
     }
     final serverAddress = _subscriptionServers[subscriptionIndex][index];
     print('Pinging server: $serverAddress');
+    
     try {
       final ping = Ping(serverAddress, count: 3);
       final pingData = await ping.stream.firstWhere((data) => data.response != null);
       if (pingData.response != null) {
         final latency = pingData.response!.time!.inMilliseconds;
         final result = PingResult(subscriptionIndex: subscriptionIndex, serverIndex: index, latencyInMs: latency);
-        _pingResultSubject.add(result);        
+        _pingResultSubject.add(result);
         print('Ping result: sub=${result.subscriptionIndex}, server=${result.serverIndex}, latency=${result.latencyInMs} ms');
       } else {
         print('Ping failed: No response');
@@ -356,42 +337,45 @@ class VPNclientEngine {
   }
 
   static String getConnectionStatus() {
-      //  enum ConnectionStatus { connecting, connected, disconnected, error }
-      return 'disconnected';
+    //  enum ConnectionStatus { connecting, connected, disconnected, error }
+    return 'disconnected';
   }
 
-    static List<Server> getServerList() {
-      //TODO:
-      //Fetches the list of available VPN servers.
-      return [
-          Server(address: 'server1.com', latency: 50, location: 'USA', isPreferred: true),
-          Server(address: 'server2.com', latency: 100, location: 'UK', isPreferred: false),
-          Server(address: 'server3.com', latency: 75, location: 'Canada', isPreferred: false),
-      ];
-    }
+  static List<Server> getServerList() {
+    //TODO:
+    //Fetches the list of available VPN servers.
+    return [
+      Server(address: 'server1.com', latency: 50, location: 'USA', isPreferred: true),
+      Server(address: 'server2.com', latency: 100, location: 'UK', isPreferred: false),
+      Server(address: 'server3.com', latency: 75, location: 'Canada', isPreferred: false),
+    ];
+  }
 
-    static Future<void> loadSubscriptions({required List<String> subscriptionLinks}) async {
-        print('loadSubscriptions: ${subscriptionLinks.join(", ")}');
-        _subscriptions.addAll(subscriptionLinks);
-        print('Subscriptions added: ${subscriptionLinks.join(", ")}');
-        //TODO: loading process
+  static Future<void> loadSubscriptions({required List<String> subscriptionLinks}) async {
+    print('loadSubscriptions: ${subscriptionLinks.join(", ")}');
+    _subscriptions.addAll(subscriptionLinks);
+    for (var element in subscriptionLinks) {
+      addSubscription(subscriptionURL: element);
+      await updateSubscription(subscriptionIndex: _subscriptions.length-1);
     }
+    print('Subscriptions added: ${subscriptionLinks.join(", ")}');
+  }
 
-    static SessionStatistics getSessionStatistics() {
-        //TODO:
-        return SessionStatistics(
-          sessionDuration: Duration(minutes: 30),
-          dataInBytes: 1024 * 1024 * 100, // 100MB
-          dataOutBytes: 1024 * 1024 * 50, // 50MB
-        );
-    }
+  static SessionStatistics getSessionStatistics() {
+    //TODO:
+    return SessionStatistics(
+      sessionDuration: Duration(minutes: 30),
+      dataInBytes: 1024 * 1024 * 100, // 100MB
+      dataOutBytes: 1024 * 1024 * 50, // 50MB
+    );
+  }
 
-    static void setAutoConnect({required bool enable}) {
-        print('setAutoConnect: $enable');
-    }
+  static void setAutoConnect({required bool enable}) {
+    print('setAutoConnect: $enable');
+  }
 
-    static void setKillSwitch({required bool enable}) {
-      print('setKillSwitch: $enable');
-    }
+  static void setKillSwitch({required bool enable}) {
+    print('setKillSwitch: $enable');
+  }
 
 }
