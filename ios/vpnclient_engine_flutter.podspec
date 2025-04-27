@@ -6,6 +6,7 @@ Pod::Spec.new do |s|
   s.license          = { :type => 'MIT' }
   s.author           = { 'Your Name' => 'your.email@example.com' }
   s.source           = { :path => '.' }
+  s.dependency 'PacketTunnelProvider'
   s.ios.deployment_target = '11.0'
   s.dependency 'Flutter'
   s.source_files = 'Classes/**/*'
