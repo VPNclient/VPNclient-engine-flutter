@@ -2,11 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:dart_ping/dart_ping.dart';
-import 'package:vpnclient_engine_flutter/vpnclient_engine/server_connection.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter_v2ray/flutter_v2ray.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:vpnclient_engine_flutter/vpnclient_engine_flutter.dart';
+import 'package:vpnclient_engine_flutter/vpnclient_engine/core.dart';
 
 
 enum ConnectionStatus {
@@ -113,18 +112,11 @@ class RoutingRule {
   final String action; // proxy, direct, block
 
   RoutingRule({this.appName, this.domain, required this.action});
-
 }
 
 
 
 
-final FlutterV2ray flutterV2ray = FlutterV2ray(
-    onStatusChanged: (status) {
-      print("status changed: $status");
-    },
-
-  );
 class VPNclientEngine {
   static List<List<String>> _subscriptionServers = [];
   static Map<int, ServerConnection> _connections = {};
@@ -156,6 +148,8 @@ class VPNclientEngine {
   static final _killSwitchTriggeredSubject = BehaviorSubject<void>();
   static Stream<void> get onKillSwitchTriggered => _killSwitchTriggeredSubject.stream;
 
+  static VpnCore? _vpnCore;
+
 
   static void _emitError(ErrorCode code, String message) {
     _errorSubject.add(ErrorDetails(errorCode: code, errorMessage: message));
@@ -167,6 +161,10 @@ class VPNclientEngine {
 
   static void initialize() {
     print('VPNclient Engine initialized');
+    if (_vpnCore == null) {
+      // Default core is V2Ray
+      _vpnCore = V2RayCore();
+    }
   }
 
   static void ClearSubscriptions() {
@@ -235,56 +233,28 @@ class VPNclientEngine {
     }
   }
 
-  static Future<void> connect({required int subscriptionIndex, required int serverIndex}) async {
-    print('Connecting to subscription $subscriptionIndex, server $serverIndex...');
-
-    if (subscriptionIndex < 0 || subscriptionIndex >= _subscriptionServers.length) {
-      _emitError(ErrorCode.unknownError, 'Invalid subscription index');
+  static Future<void> connect({
+    required int subscriptionIndex,
+    required int serverIndex,
+    ProxyConfig? proxyConfig,
+  }) async {
+    if (_vpnCore == null) {
+      _emitError(ErrorCode.unknownError, 'VPN core is not initialized.');
       return;
     }
 
-    if (serverIndex < 0 || serverIndex >= _subscriptionServers[subscriptionIndex].length) {
-      _emitError(ErrorCode.unknownError, 'Invalid server index');
-      return;
-    }
-
-    _connectionStatusSubject.add(ConnectionStatus.connecting);
-    VpnclientEngineFlutterPlatform.instance.connect(subscriptionIndex: subscriptionIndex, serverIndex: serverIndex).then((_) {
-      _connectionStatusSubject.add(ConnectionStatus.connected);
-    }).catchError((error) {
-      _connectionStatusSubject.add(ConnectionStatus.error);
-      _emitError(ErrorCode.unknownError, 'Error on connect: $error');
-    });
-
-    //Get server info
-    String link = _subscriptionServers[subscriptionIndex][serverIndex];
-    V2RayURL parser = FlutterV2ray.parseFromURL(link);
-    _serverSwitchedSubject.add(parser.remark ?? "null");
-
-    print('Connecting to server: $link');
+    await _vpnCore!.connect(Server(address: _subscriptionServers[subscriptionIndex][serverIndex]), proxyConfig);
   }
 
-  static Future<void> disconnect() async {
-    print('Disconnecting...');
 
-    if(_connections.isEmpty){
-      print('Noting to disconnect.');
-      _connectionStatusSubject.add(ConnectionStatus.disconnected);
+  static Future<void> disconnect() async {
+    if (_vpnCore == null) {
+      _emitError(ErrorCode.unknownError, 'VPN core is not initialized.');
       return;
     }
-    
-    VpnclientEngineFlutterPlatform.instance.disconnect().then((_) {
-      _connectionStatusSubject.add(ConnectionStatus.disconnected);
-    }).catchError((error) {
-      _connectionStatusSubject.add(ConnectionStatus.error);
-      _emitError(ErrorCode.unknownError, 'Error on disconnect: $error');
-    });
-/*
-    try {
-        
-        await flutterV2ray.stopV2Ray();
-        _connections.clear();
-        _connectionStatusSubject.add(ConnectionStatus.disconnected);
+
+    await _vpnCore!.disconnect();
+    /*   try {
 
     } catch (e) {
         _connectionStatusSubject.add(ConnectionStatus.error);
@@ -292,7 +262,7 @@ class VPNclientEngine {
         print('Error disconnecting: $e');
     }*/
     
-    print('Disconnected successfully');
+
   }
 
 
@@ -355,10 +325,9 @@ class VPNclientEngine {
     print('loadSubscriptions: ${subscriptionLinks.join(", ")}');
     _subscriptions.addAll(subscriptionLinks);
     for (var element in subscriptionLinks) {
-      addSubscription(subscriptionURL: element);
-      await updateSubscription(subscriptionIndex: _subscriptions.length-1);
-    }
-    print('Subscriptions added: ${subscriptionLinks.join(", ")}');
+        addSubscription(subscriptionURL: element);
+        await updateSubscription(subscriptionIndex: _subscriptions.length - 1);
+      }
   }
 
   static SessionStatistics getSessionStatistics() {

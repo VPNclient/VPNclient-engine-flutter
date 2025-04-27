@@ -1,8 +1,3 @@
-import Flutter
-import UIKit
-import NetworkExtension
-import flutter_v2ray_plugin
-
 enum VpnError: Error {
     case missingConfig
     case startFailed(String)
@@ -10,6 +5,10 @@ enum VpnError: Error {
 }
 
 /// Plugin class to handle VPN connections in the Flutter app.
+import Flutter
+import UIKit
+import NetworkExtension
+import flutter_v2ray_plugin
 public class VpnclientEngineFlutterPlugin: NSObject, FlutterPlugin {
     private var tunnelProvider: NETunnelProviderManager?
     
@@ -25,6 +24,7 @@ public class VpnclientEngineFlutterPlugin: NSObject, FlutterPlugin {
     private var v2rayPlugin = FlutterV2rayPlugin.sharedInstance()
     
     private var tunnelManager: NETunnelProviderManager?
+    private var isVpnRunning: Bool = false
     
     public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
@@ -40,6 +40,8 @@ public class VpnclientEngineFlutterPlugin: NSObject, FlutterPlugin {
             self.requestPermissions(result: result)
         case "getConnectionStatus":
             self.getConnectionStatus(result: result)
+        case "getPlatformVersion":
+            result("iOS " + UIDevice.current.systemVersion)
         case "checkSystemPermission":
             self.checkSystemPermission(result: result)
         default:
@@ -50,23 +52,30 @@ public class VpnclientEngineFlutterPlugin: NSObject, FlutterPlugin {
     private func connect(arguments: [String: Any], result: @escaping FlutterResult) {
         guard let link = arguments["link"] as? String else {
             result(FlutterError(code: "INVALID_ARGUMENTS", message: "Missing or invalid config", details: nil))
-            return
-        }
+              return
+          }
         
-        let parsedConfig = FlutterV2ray.parseFromURL(link)
-        
-        let config: String = parsedConfig.getFullConfiguration()
-        
-        if config.isEmpty {
+        var parsedConfig: V2RayURL
+          do {
+              parsedConfig = try FlutterV2ray.parseFromURL(link)
+          } catch {
+              result(FlutterError(code: "PARSE_ERROR", message: "Failed to parse config: \(error)", details: nil))
+              return
+          }
+          
+          let config = parsedConfig.getFullConfiguration()
+          
+          if config.isEmpty {
             result(FlutterError(code: "CONFIG_ERROR", message: "Invalid V2Ray config", details: nil))
-        }
-        
-        v2rayPlugin.startV2Ray(
-            remark: parsedConfig.remark,
-            config: config,
-            blockedApps: nil,
-            bypassSubnets: nil,
-            proxyOnly: false
+              return
+          }
+          
+          v2rayPlugin.startV2Ray(
+              remark: parsedConfig.remark,
+              config: config,
+              blockedApps: nil,
+              bypassSubnets: nil,
+              proxyOnly: false
         ) { err in
             if let err = err {
                 DispatchQueue.main.async {
@@ -76,6 +85,7 @@ public class VpnclientEngineFlutterPlugin: NSObject, FlutterPlugin {
             } else {
                 DispatchQueue.main.async {
                     self.sendConnectionStatus(status: "connected")
+                    self.isVpnRunning = true
                     result(nil)
                 }
             }
@@ -96,6 +106,7 @@ public class VpnclientEngineFlutterPlugin: NSObject, FlutterPlugin {
             } else {
                 DispatchQueue.main.async {
                     self.sendConnectionStatus(status: "disconnected")
+                    self.isVpnRunning = false
                     result(nil)
                 }
             }
@@ -171,7 +182,7 @@ public class VpnclientEngineFlutterPlugin: NSObject, FlutterPlugin {
     }
     
     private func getConnectionStatus(result: @escaping FlutterResult) {
-        if v2rayPlugin.isRunning() == true {
+        if isVpnRunning == true {
             result("connected")
         } else {
             result("disconnected")
