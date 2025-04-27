@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:io' show Platform;
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:vpnclient_engine_flutter/platforms/ios.dart';
 import 'package:flutter/services.dart';
 import 'package:vpnclient_engine_flutter/platforms/android.dart';
 
@@ -20,7 +23,11 @@ abstract class VpnclientEngineFlutterPlatform {
       } else if (Platform.isIOS) {
         _instance = IosVpnclientEngineFlutter();
       } else {
-        throw UnimplementedError('Platform not supported');
+        _instance = VpnclientEngineFlutterPlatform();
+        print(
+            'VPNclientEngineFlutter: Warning: Platform not yet supported, fallback to default implementation');
+        print('Please report this platform ${Platform.operatingSystem} on https://github.com/VPNclient/vpnclient_engine_flutter/issues');
+        
       }
     }
     return _instance!;
@@ -33,25 +40,25 @@ abstract class VpnclientEngineFlutterPlatform {
   });
 
   Future<void> disconnect();
+
+  void sendStatus(ConnectionStatus status) {
+      print("default: $status");
+  }
+
+  void sendError(ErrorCode errorCode, String errorMessage) {
+      print("default: $errorCode $errorMessage");
+  }
 }
 
-class IosVpnclientEngineFlutter extends VpnclientEngineFlutterPlatform {
-  static const MethodChannel _channel =
-      MethodChannel('vpnclient_engine_flutter');
-
-  @override
-  Future<String?> getPlatformVersion() async {
-    final version = await _channel.invokeMethod<String>('getPlatformVersion');
-    return version;
-  }
+class VpnclientEngineFlutter extends VpnclientEngineFlutterPlatform {
 
   @override
   Future<void> connect({required String url}) async {
-    await _channel.invokeMethod('connect', {'url': url});
+    return Future.value();
   }
 
   @override
-  Future<void> disconnect() async {
-    await _channel.invokeMethod('disconnect');
+  Future<String?> getPlatformVersion() async {
+    return "Platform not yet supported";
   }
 }

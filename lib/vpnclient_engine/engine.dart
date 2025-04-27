@@ -2,10 +2,10 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:dart_ping/dart_ping.dart';
-import 'package:flutter/foundation.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:vpnclient_engine_flutter/vpnclient_engine_flutter.dart';
 import 'package:vpnclient_engine_flutter/vpnclient_engine/core.dart';
+
 
 
 enum ConnectionStatus {
@@ -148,13 +148,15 @@ class VPNclientEngine {
   static final _killSwitchTriggeredSubject = BehaviorSubject<void>();
   static Stream<void> get onKillSwitchTriggered => _killSwitchTriggeredSubject.stream;
 
-  static VpnCore? _vpnCore;
+  static VpnCore _vpnCore = V2RayCore();
+  
 
 
   static void _emitError(ErrorCode code, String message) {
     _errorSubject.add(ErrorDetails(errorCode: code, errorMessage: message));
   }
 
+  
 
   static List<String> _subscriptions = [];
 
@@ -238,15 +240,27 @@ class VPNclientEngine {
     required int serverIndex,
     ProxyConfig? proxyConfig,
   }) async {
-    if (_vpnCore == null) {
-      _emitError(ErrorCode.unknownError, 'VPN core is not initialized.');
+    final url = _subscriptionServers[subscriptionIndex][serverIndex];
+    
+    if (url.startsWith('vless://') || url.startsWith('vmess://') || url.startsWith('v2ray://')) {
+        _vpnCore = V2RayCore();
+    } else if (url.startsWith('wg://')) {
+        _vpnCore = WireGuardCore();
+    } else if (url.startsWith('openvpn://') || url.endsWith('.ovpn')) {
+        _vpnCore = OpenVPNCore();
+    } else {
+        _emitError(ErrorCode.unknownError, 'Unsupported URL format');
+        return;
+    }
+    if (serverIndex < 0 || serverIndex >= _subscriptionServers[subscriptionIndex].length) {
+      _emitError(ErrorCode.unknownError, 'Invalid server index');
       return;
     }
 
-    await _vpnCore!.connect(Server(address: _subscriptionServers[subscriptionIndex][serverIndex]), proxyConfig);
+    await _vpnCore.connect(Server(address: _subscriptionServers[subscriptionIndex][serverIndex]), proxyConfig);
   }
 
-
+  
   static Future<void> disconnect() async {
     if (_vpnCore == null) {
       _emitError(ErrorCode.unknownError, 'VPN core is not initialized.');
@@ -254,13 +268,6 @@ class VPNclientEngine {
     }
 
     await _vpnCore!.disconnect();
-    /*   try {
-
-    } catch (e) {
-        _connectionStatusSubject.add(ConnectionStatus.error);
-        _emitError(ErrorCode.unknownError, 'Error disconnecting: $e');
-        print('Error disconnecting: $e');
-    }*/
     
 
   }
@@ -326,7 +333,7 @@ class VPNclientEngine {
     _subscriptions.addAll(subscriptionLinks);
     for (var element in subscriptionLinks) {
         addSubscription(subscriptionURL: element);
-        await updateSubscription(subscriptionIndex: _subscriptions.length - 1);
+        await updateSubscription(subscriptionIndex: _subscriptions.indexOf(element));
       }
   }
 

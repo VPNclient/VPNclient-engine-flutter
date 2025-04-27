@@ -1,9 +1,7 @@
-enum VpnError: Error {
-    case missingConfig
-    case startFailed(String)
-    case stopFailed(String)
-}
-
+import Foundation
+import NetworkExtension
+import Flutter
+import FlutterV2ray
 /// Plugin class to handle VPN connections in the Flutter app.
 import Flutter
 import UIKit
@@ -18,11 +16,11 @@ public class VpnclientEngineFlutterPlugin: NSObject, FlutterPlugin {
         registrar.addMethodCallDelegate(instance, channel: channel)
         instance.channel = channel
     }
-    
     private var channel: FlutterMethodChannel?
-    
-    private var v2rayPlugin = FlutterV2rayPlugin.sharedInstance()
-    
+    private let v2rayPlugin = FlutterV2rayPlugin.sharedInstance()
+    private var isVpnRunning = false
+    private var currentConfig: V2RayURL?
+
     private var tunnelManager: NETunnelProviderManager?
     private var isVpnRunning: Bool = false
     
@@ -54,32 +52,47 @@ public class VpnclientEngineFlutterPlugin: NSObject, FlutterPlugin {
             result(FlutterError(code: "INVALID_ARGUMENTS", message: "Missing or invalid config", details: nil))
               return
           }
-        
-        var parsedConfig: V2RayURL
-          do {
-              parsedConfig = try FlutterV2ray.parseFromURL(link)
-          } catch {
-              result(FlutterError(code: "PARSE_ERROR", message: "Failed to parse config: \(error)", details: nil))
-              return
-          }
-          
-          let config = parsedConfig.getFullConfiguration()
-          
-          if config.isEmpty {
+        if link.starts(with: "vless://") || link.starts(with: "vmess://") {
+            var parsedConfig: V2RayURL
+            do {
+                parsedConfig = try FlutterV2ray.parseFromURL(link)
+            } catch {
+                sendError(errorCode: "PARSE_ERROR", errorMessage: "Failed to parse config: \(error)")
+                result(FlutterError(code: "PARSE_ERROR", message: "Failed to parse config: \(error)", details: nil))
+                return
+            }
+            
+            currentConfig = parsedConfig
+            startV2Ray(config: parsedConfig, result: result)
+        } else if link.starts(with: "wg://") {
+            var parsedConfig: V2RayURL
+            do {
+                parsedConfig = try FlutterV2ray.parseFromURL(link)
+            } catch {
+                sendError(errorCode: "PARSE_ERROR", errorMessage: "Failed to parse config: \(error)")
+                result(FlutterError(code: "PARSE_ERROR", message: "Failed to parse config: \(error)", details: nil))
+                return
+            }
+            
+            currentConfig = parsedConfig
+            startV2Ray(config: parsedConfig, result: result)
+        } else {
+            sendError(errorCode: "UNKNOWN_PROTOCOL", errorMessage: "Unknown protocol")
+            result(FlutterError(code: "UNKNOWN_PROTOCOL", message: "Unknown protocol", details: nil))
+        }
+    }
+
+    private func startV2Ray(config: V2RayURL, result: @escaping FlutterResult) {
+        let fullConfig = config.getFullConfiguration()
+        if fullConfig.isEmpty {
+            sendError(errorCode: "CONFIG_ERROR", errorMessage: "Invalid V2Ray config")
             result(FlutterError(code: "CONFIG_ERROR", message: "Invalid V2Ray config", details: nil))
-              return
-          }
-          
-          v2rayPlugin.startV2Ray(
-              remark: parsedConfig.remark,
-              config: config,
-              blockedApps: nil,
-              bypassSubnets: nil,
-              proxyOnly: false
-        ) { err in
+            return
+        }
+        v2rayPlugin.startV2Ray(remark: config.remark, config: fullConfig, blockedApps: nil, bypassSubnets: nil, proxyOnly: false) { err in
             if let err = err {
                 DispatchQueue.main.async {
-                    self.sendError(errorCode: "VPN_START_FAILED", errorMessage: err)
+                    self.sendError(errorCode: "VPN_ERROR", errorMessage: err)
                     result(FlutterError(code: "VPN_START_FAILED", message: "Failed to start VPN: \(err)", details: nil))
                 }
             } else {
@@ -90,7 +103,7 @@ public class VpnclientEngineFlutterPlugin: NSObject, FlutterPlugin {
                 }
             }
         }
-    }
+    }    
     
     private func sendError(errorCode: String, errorMessage: String) {
         channel?.invokeMethod("onError", arguments: ["errorCode": errorCode, "errorMessage": errorMessage])
@@ -98,12 +111,13 @@ public class VpnclientEngineFlutterPlugin: NSObject, FlutterPlugin {
     
     private func disconnect(result: @escaping FlutterResult) {
         v2rayPlugin.stopV2Ray { err in
+            self.currentConfig = nil
             if let err = err {
                 DispatchQueue.main.async {
-                    self.sendError(errorCode: "VPN_STOP_FAILED", errorMessage: err)
+                    self.sendError(errorCode: "VPN_ERROR", errorMessage: err)
                     result(FlutterError(code: "VPN_STOP_FAILED", message: "Failed to stop VPN: \(err)", details: nil))
                 }
-            } else {
+            } else if self.isVpnRunning {
                 DispatchQueue.main.async {
                     self.sendConnectionStatus(status: "disconnected")
                     self.isVpnRunning = false

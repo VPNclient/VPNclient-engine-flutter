@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:dart_ping/dart_ping.dart';
+import 'package:vpnclient_engine_flutter/vpnclient_engine/core.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:vpnclient_engine_flutter/vpnclient_engine_flutter_platform_interface.dart';
@@ -114,6 +115,16 @@ class RoutingRule {
   RoutingRule({this.appName, this.domain, required this.action});
 }
 
+class WireGuardCore implements VpnCore {
+  @override
+  Future<void> connect({required int subscriptionIndex, required int serverIndex}) {
+    // TODO: implement connect
+    throw UnimplementedError();
+  }
+
+  
+}
+
 abstract class VpnCore {
   Future<void> connect({required int subscriptionIndex, required int serverIndex});
   Future<void> disconnect();
@@ -126,6 +137,8 @@ abstract class VpnCore {
   void setAutoConnect({required bool enable});
   void setKillSwitch({required bool enable});
 }
+
+
 
 class V2RayCore implements VpnCore {
   final FlutterV2ray _flutterV2ray = FlutterV2ray(
@@ -392,3 +405,10 @@ class V2RayCore implements VpnCore {
     print('setKillSwitch: $enable');
   }
 }
+
+class OpenVPNCore implements VpnCore {
+  @override
+  Future<void> connect({required int subscriptionIndex, required int serverIndex}) {
+    // TODO: implement connect
+    throw UnimplementedError();
+  }
