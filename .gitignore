@@ -31,3 +31,7 @@ migrate_working_dir/
 .flutter-plugins
 .flutter-plugins-dependencies
 build/
+
+# Node.js
+node_modules
+.env
