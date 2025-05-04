@@ -1,4 +1,4 @@
-package click.vpnclient.engine.flutter.vpnclient_engine_flutter
+package click.vpnclient.engine.flutter
 
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel

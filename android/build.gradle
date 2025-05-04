@@ -1,4 +1,4 @@
-group = "click.vpnclient.engine.flutter.vpnclient_engine_flutter"
+group = "click.vpnclient.engine.flutter"
 version = "1.0-SNAPSHOT"
 
 buildscript {
@@ -27,7 +27,7 @@ apply plugin: "com.android.library"
 apply plugin: "kotlin-android"
 
 android {
-    namespace = "click.vpnclient.engine.flutter.vpnclient_engine_flutter"
+    namespace = "click.vpnclient.engine.flutter"
 
     compileSdk = 35
 

@@ -1,4 +1,4 @@
-package click.vpnclient.engine.flutter.vpnclient_engine_flutter
+package click.vpnclient.engine.flutter
 
 import android.content.Context
 import android.util.Log
@@ -20,7 +20,6 @@ class VpnclientEngineFlutterPlugin :
     // / The MethodChannel that will handle the communication between Flutter and native Android
     private lateinit var channel: MethodChannel
     private lateinit var context: Context
-    private val TAG = "VpnclientEngineFlutterPlugin"
 
     private var singboxCore: SingBoxCore? = null
 
@@ -51,7 +50,7 @@ class VpnclientEngineFlutterPlugin :
         try {
             singboxCore = SingBoxCore(config)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to initialize sing-box", e)
+            Log.e(packageName, "Failed to initialize sing-box", e)
         }
     }
 
@@ -70,7 +69,7 @@ class VpnclientEngineFlutterPlugin :
             singboxCore?.start()
             result.success(true)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to start sing-box", e)
+            Log.e(packageName, "Failed to start sing-box", e)
             result.error("START_ERROR", "Failed to start sing-box", e.message)
         }
     }
@@ -88,7 +87,7 @@ class VpnclientEngineFlutterPlugin :
             singboxCore = null // Release sing-box instance after stopping
             result.success(true)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to stop sing-box", e)
+            Log.e(packageName, "Failed to stop sing-box", e)
             result.error("STOP_ERROR", "Failed to stop sing-box", e.message)
         }
     }
@@ -101,7 +100,7 @@ class VpnclientEngineFlutterPlugin :
             val status = singboxCore?.getStatus() ?: "stopped"
             result.success(status)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to get sing-box status", e)
+            Log.e(packageName, "Failed to get sing-box status", e)
             result.error(
                 "STATUS_ERROR",
                 "Failed to get sing-box status",
@@ -119,11 +118,23 @@ class VpnclientEngineFlutterPlugin :
     }
 }
 
+<<<<<<< HEAD:android/src/main/kotlin/click/vpnclient/engine/flutter/vpnclient_engine_flutter/VpnclientEngineFlutterPlugin.kt
 class SingBoxCore(
     config: String,
 ) {
     private val TAG = "SingBoxCore"
 
+||||||| parent of 8b139ce (Cleanup messy code):android/src/main/kotlin/click/vpnclient/engine/flutter/vpnclient_engine_flutter/VpnclientEngineFlutterPlugin.kt
+
+
+class SingBoxCore(config: String) {
+    private val TAG = "SingBoxCore"
+
+=======
+class SingBoxCore(
+    config: String,
+) {
+>>>>>>> 8b139ce (Cleanup messy code):android/src/main/kotlin/click/vpnclient/engine/flutter/VpnClientEngineFlutterPlugin.kt
     init {
         try {
             // Initialize the Go runtime
@@ -131,7 +142,7 @@ class SingBoxCore(
             // Load the sing-box configuration from the provided string
             Singbox.setConfig(config)
         } catch (e: Exception) {
-            Log.e(TAG, "Error initializing SingBox: ${e.message}")
+            Log.e(packageName, "Error initializing SingBox: ${e.message}")
             throw e
         }
     }
@@ -148,7 +159,7 @@ class SingBoxCore(
                 throw Exception("Error starting SingBox: $err")
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error starting SingBox: ${e.message}")
+            Log.e(packageName, "Error starting SingBox: ${e.message}")
             throw e
         }
     }
@@ -162,7 +173,7 @@ class SingBoxCore(
             // Stop the SingBox core
             Singbox.stop()
         } catch (e: Exception) {
-            Log.e(TAG, "Error stopping SingBox: ${e.message}")
+            Log.e(packageName, "Error stopping SingBox: ${e.message}")
             throw e
         }
     }

@@ -7,8 +7,52 @@ import 'package:rxdart/rxdart.dart';
 import 'package:vpnclient_engine_flutter/vpnclient_engine_flutter.dart';
 import 'package:vpnclient_engine_flutter/vpnclient_engine/core.dart';
 
+<<<<<<< HEAD
+||||||| parent of 8b139ce (Cleanup messy code)
+
+
+enum ConnectionStatus {
+  connecting,
+  connected,
+  disconnected,
+  error,
+}
+
+enum ErrorCode {
+  invalidCredentials,
+  serverUnavailable,
+  subscriptionExpired,
+  unknownError,
+}
+
+enum ProxyType {
+  socks5,
+  http,
+}
+
+enum Action {
+  block,
+  allow,
+  routeThroughVPN,
+  direct,
+  proxy,
+}
+
+=======
+enum ConnectionStatus { connecting, connected, disconnected, error }
+
+enum ErrorCode {
+  invalidCredentials,
+  serverUnavailable,
+  subscriptionExpired,
+  unknownError,
+}
+
+enum ProxyType { socks5, http }
+
 enum Action { block, allow, routeThroughVPN, direct, proxy }
 
+>>>>>>> 8b139ce (Cleanup messy code)
 class Server {
   final String address;
   final int? latency;
@@ -126,6 +170,17 @@ class VPNclientEngine {
     _errorSubject.add(ErrorDetails(errorCode: code, errorMessage: message));
   }
 
+<<<<<<< HEAD
+  static List<String> _subscriptions = [];
+
+||||||| parent of 8b139ce (Cleanup messy code)
+  
+
+  static List<String> _subscriptions = [];
+
+
+=======
+>>>>>>> 8b139ce (Cleanup messy code)
   static void initialize() {
     print('VPNclient Engine initialized');
     _vpnCore ??= V2RayCore();
