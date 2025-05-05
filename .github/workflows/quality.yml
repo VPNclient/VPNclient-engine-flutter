@@ -1,4 +1,4 @@
-name: Flutter Integration Test
+name: Code Quality
 
 on:
   push:
@@ -13,6 +13,9 @@ jobs:
         with:
           channel: stable
           flutter-version-file: pubspec.yaml
-      - name: Flutter integration test
-        working-directory: ./example
-        run: flutter test integration_test
+      - name: Install dependencies
+        run: flutter pub get
+      - name: Analyze code
+        run: flutter analyze
+      - name: Format code
+        run: dart format --output=none --set-exit-if-changed .

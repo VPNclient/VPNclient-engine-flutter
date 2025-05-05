@@ -1,33 +1,33 @@
 name: Publish Flutter Plugin
 
 on:
-  push:
-    tags:
-      - 'v*'
+  workflow_run:
+    workflows:
+      - "Code Quality"
+      - "Flutter Integration Test"
+    types:
+      - completed
 
 jobs:
   publish:
+    if: startsWith(github.event.workflow_run.head_ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.16.0' # or specify latest stable
-
+          channel: stable
+          flutter-version-file: pubspec.yaml
       - name: Install dependencies
         run: flutter pub get
-
       - name: Analyze code
         run: flutter analyze
-
       - name: Format code
         run: dart format --output=none --set-exit-if-changed .
-
       - name: Update version
         run: |
           LATEST_TAG=$(git describe --tags --abbrev=0)
@@ -38,10 +38,8 @@ jobs:
           git add pubspec.yaml
           git commit -m "chore: update version to $VERSION"
           git push
-
       - name: Run tests
         run: flutter test
-
       - name: Publish plugin
         run: flutter pub publish --force
         env:
