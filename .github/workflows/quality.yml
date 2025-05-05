@@ -4,11 +4,12 @@ on:
   push:
 
 jobs:
-  integration:
+  analyze:
+    name: Static Analysis
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up Flutter
+      - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -17,5 +18,12 @@ jobs:
         run: flutter pub get
       - name: Analyze code
         run: flutter analyze
+  format:
+    name: Code Formatting
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup dart
+        uses: dart-lang/setup-dart@v1
       - name: Format code
         run: dart format --output=none --set-exit-if-changed .

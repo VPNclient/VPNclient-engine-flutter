@@ -4,7 +4,7 @@ on:
   workflow_run:
     workflows:
       - "Code Quality"
-      - "Flutter Integration Test"
+      - "Run Tests"
     types:
       - completed
 
@@ -17,17 +17,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Set up Flutter
+      - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
           flutter-version-file: pubspec.yaml
       - name: Install dependencies
         run: flutter pub get
-      - name: Analyze code
-        run: flutter analyze
-      - name: Format code
-        run: dart format --output=none --set-exit-if-changed .
       - name: Update version
         run: |
           LATEST_TAG=$(git describe --tags --abbrev=0)
@@ -38,8 +34,6 @@ jobs:
           git add pubspec.yaml
           git commit -m "chore: update version to $VERSION"
           git push
-      - name: Run tests
-        run: flutter test
       - name: Publish plugin
         run: flutter pub publish --force
         env:
