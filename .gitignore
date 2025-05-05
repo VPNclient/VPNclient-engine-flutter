@@ -36,5 +36,5 @@ build/
 node_modules
 .env
 
-# FVM
-.fvm
+# FVM Version Cache
+.fvm/
