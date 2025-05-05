@@ -5,6 +5,7 @@ homepage: "https://vpnclient.click"
 
 environment:
   sdk: ^3.7.2
+  flutter: 3.29.3
 
 dependencies:
   flutter:
