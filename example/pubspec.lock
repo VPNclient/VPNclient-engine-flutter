@@ -341,4 +341,4 @@ packages:
     version: "3.0.4"
 sdks:
   dart: ">=3.7.2 <4.0.0"
-  flutter: ">=3.18.0-18.0.pre.54"
+  flutter: ">=3.29.3"
