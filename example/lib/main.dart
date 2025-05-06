@@ -14,9 +14,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'VPN Client Engine Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
+      theme: ThemeData(primarySwatch: Colors.blue),
       home: const VPNClientDemo(),
     );
   }
@@ -35,9 +33,13 @@ class VPNClientDemoState extends State<VPNClientDemo> {
   String _pingResult = 'Not Pinging';
   List<RoutingRule> _routingRules = [];
   List<Server> _servers = [];
-  SessionStatistics _sessionStatistics = SessionStatistics(dataInBytes: 0, dataOutBytes: 0);
+  SessionStatistics _sessionStatistics = SessionStatistics(
+    dataInBytes: 0,
+    dataOutBytes: 0,
+  );
 
-  final TextEditingController _subscriptionUrlController = TextEditingController();
+  final TextEditingController _subscriptionUrlController =
+      TextEditingController();
   final List<String> _loadedSubscriptions = [];
 
   @override
@@ -58,7 +60,8 @@ class VPNClientDemoState extends State<VPNClientDemo> {
 
   void _updatePingResult(PingResult result) {
     setState(() {
-      _pingResult = 'Ping: sub=${result.subscriptionIndex}, server=${result.serverIndex}, latency=${result.latencyInMs} ms';
+      _pingResult =
+          'Ping: sub=${result.subscriptionIndex}, server=${result.serverIndex}, latency=${result.latencyInMs} ms';
     });
   }
 
@@ -73,7 +76,6 @@ class VPNClientDemoState extends State<VPNClientDemo> {
       _sessionStatistics = stats;
     });
   }
-
 
   void _connectToServer() async {
     await VPNclientEngine.connect(subscriptionIndex: 0, serverIndex: 0);
@@ -116,17 +118,15 @@ class VPNClientDemoState extends State<VPNClientDemo> {
     setState(() {
       _loadedSubscriptions.add(_subscriptionUrlController.text);
     });
-    await VPNclientEngine.loadSubscriptions(subscriptionLinks: [_subscriptionUrlController.text]);
+    await VPNclientEngine.loadSubscriptions(
+      subscriptionLinks: [_subscriptionUrlController.text],
+    );
   }
-
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('VPN Client Engine Demo'),
-      ),
+      appBar: AppBar(title: const Text('VPN Client Engine Demo')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -167,7 +167,9 @@ class VPNClientDemoState extends State<VPNClientDemo> {
               itemBuilder: (context, index) {
                 return ListTile(
                   title: Text(_servers[index].address),
-                  subtitle: Text('Latency: ${_servers[index].latency ?? 'N/A'}, Location: ${_servers[index].location ?? 'N/A'}'),
+                  subtitle: Text(
+                    'Latency: ${_servers[index].latency ?? 'N/A'}, Location: ${_servers[index].location ?? 'N/A'}',
+                  ),
                 );
               },
             ),
@@ -186,7 +188,9 @@ class VPNClientDemoState extends State<VPNClientDemo> {
                 final rule = _routingRules[index];
                 return ListTile(
                   title: Text('Rule ${index + 1}'),
-                  subtitle: Text('App Name: ${rule.appName ?? 'N/A'}, Domain: ${rule.domain ?? 'N/A'}, Action: ${rule.action}'),
+                  subtitle: Text(
+                    'App Name: ${rule.appName ?? 'N/A'}, Domain: ${rule.domain ?? 'N/A'}, Action: ${rule.action}',
+                  ),
                 );
               },
             ),
@@ -210,9 +214,7 @@ class VPNClientDemoState extends State<VPNClientDemo> {
               physics: const NeverScrollableScrollPhysics(),
               itemCount: _loadedSubscriptions.length,
               itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(_loadedSubscriptions[index]),
-                );
+                return ListTile(title: Text(_loadedSubscriptions[index]));
               },
             ),
             const SizedBox(height: 20),
@@ -241,11 +243,9 @@ class VPNClientDemoState extends State<VPNClientDemo> {
               },
               child: const Text('Disable kill switch'),
             ),
-
           ],
         ),
       ),
     );
   }
 }
-

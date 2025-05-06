@@ -1,8 +1,6 @@
 import 'dart:async';
 import 'vpnclient_engine/engine.dart';
 
-
-
 void main() async {
   // Initialize the Engine
   VPNclientEngine.initialize();
@@ -11,7 +9,9 @@ void main() async {
   VPNclientEngine.ClearSubscriptions();
 
   // Add subscription
-  VPNclientEngine.addSubscription(subscriptionURL: "https://pastebin.com/raw/ZCYiJ98W");
+  VPNclientEngine.addSubscription(
+    subscriptionURL: "https://pastebin.com/raw/ZCYiJ98W",
+  );
   //VPNclientEngine.addSubscriptions(subscriptionURLs: ["https://pastebin.com/raw/ZCYiJ98W"]);
 
   // Update subscription

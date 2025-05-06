@@ -1,27 +1,23 @@
 package click.vpnclient.engine.flutter.vpnclient_engine_flutter
 
 import android.content.Context
+import android.util.Log
+import go.Seq
 import io.flutter.embedding.engine.plugins.FlutterPlugin
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
-import go.Seq
-import android.util.Log
-
-
-
-
-
-
 
 /**
  * VpnclientEngineFlutterPlugin
  * This class handles the communication between Flutter and native Android code
  * for managing VPN connections.
  */
-class VpnclientEngineFlutterPlugin : FlutterPlugin, MethodCallHandler {
-    /// The MethodChannel that will handle the communication between Flutter and native Android
+class VpnclientEngineFlutterPlugin :
+    FlutterPlugin,
+    MethodCallHandler {
+    // / The MethodChannel that will handle the communication between Flutter and native Android
     private lateinit var channel: MethodChannel
     private lateinit var context: Context
     private val TAG = "VpnclientEngineFlutterPlugin"
@@ -34,7 +30,10 @@ class VpnclientEngineFlutterPlugin : FlutterPlugin, MethodCallHandler {
         context = flutterPluginBinding.applicationContext
     }
 
-    override fun onMethodCall(call: MethodCall, result: Result) {
+    override fun onMethodCall(
+        call: MethodCall,
+        result: Result,
+    ) {
         when (call.method) {
             "startVPN" -> startVPN(call, result)
             "stopVPN" -> stopVPN(call, result)
@@ -61,7 +60,10 @@ class VpnclientEngineFlutterPlugin : FlutterPlugin, MethodCallHandler {
      * @param call MethodCall containing the configuration.
      * @param result Result to send the success or error back to Flutter.
      */
-    private fun startVPN(call: MethodCall, result: Result) {
+    private fun startVPN(
+        call: MethodCall,
+        result: Result,
+    ) {
         val config = call.argument<String>("config") ?: return result.error("NO_CONFIG", "Missing config", null)
         try {
             initSingbox(config)
@@ -77,7 +79,10 @@ class VpnclientEngineFlutterPlugin : FlutterPlugin, MethodCallHandler {
      * Stop the VPN connection.
      * @param result Result to send the success back to Flutter.
      */
-    private fun stopVPN(call: MethodCall, result: Result) {
+    private fun stopVPN(
+        call: MethodCall,
+        result: Result,
+    ) {
         try {
             singboxCore?.stop()
             singboxCore = null // Release sing-box instance after stopping
@@ -88,7 +93,10 @@ class VpnclientEngineFlutterPlugin : FlutterPlugin, MethodCallHandler {
         }
     }
 
-    private fun getStatus(call: MethodCall, result: Result) {
+    private fun getStatus(
+        call: MethodCall,
+        result: Result,
+    ) {
         try {
             val status = singboxCore?.getStatus() ?: "stopped"
             result.success(status)
@@ -97,10 +105,11 @@ class VpnclientEngineFlutterPlugin : FlutterPlugin, MethodCallHandler {
             result.error(
                 "STATUS_ERROR",
                 "Failed to get sing-box status",
-                e.message
+                e.message,
             )
         }
     }
+
     private fun getPlatformVersion(result: Result) {
         result.success("Android ${android.os.Build.VERSION.RELEASE}")
     }
@@ -110,9 +119,9 @@ class VpnclientEngineFlutterPlugin : FlutterPlugin, MethodCallHandler {
     }
 }
 
-
-
-class SingBoxCore(config: String) {
+class SingBoxCore(
+    config: String,
+) {
     private val TAG = "SingBoxCore"
 
     init {
@@ -158,7 +167,5 @@ class SingBoxCore(config: String) {
         }
     }
 
-    fun getStatus(): String {
-        return Singbox.getStatus()
-    }
+    fun getStatus(): String = Singbox.getStatus()
 }

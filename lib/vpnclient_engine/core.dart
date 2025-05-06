@@ -9,12 +9,7 @@ import 'package:vpnclient_engine_flutter/vpnclient_engine_flutter_platform_inter
 import 'package:flutter_v2ray/flutter_v2ray.dart';
 import 'package:rxdart/rxdart.dart';
 
-enum ConnectionStatus {
-  connecting,
-  connected,
-  disconnected,
-  error,
-}
+enum ConnectionStatus { connecting, connected, disconnected, error }
 
 enum ErrorCode {
   invalidCredentials,
@@ -23,18 +18,9 @@ enum ErrorCode {
   unknownError,
 }
 
-enum ProxyType {
-  socks5,
-  http,
-}
+enum ProxyType { socks5, http }
 
-enum Action {
-  block,
-  allow,
-  routeThroughVPN,
-  direct,
-  proxy,
-}
+enum Action { block, allow, routeThroughVPN, direct, proxy }
 
 class Server {
   final String address;
@@ -55,11 +41,7 @@ class SubscriptionDetails {
   final int? dataLimit;
   final int? usedData;
 
-  SubscriptionDetails({
-    this.expiryDate,
-    this.dataLimit,
-    this.usedData,
-  });
+  SubscriptionDetails({this.expiryDate, this.dataLimit, this.usedData});
 }
 
 class SessionStatistics {
@@ -117,16 +99,20 @@ class RoutingRule {
 
 class WireGuardCore implements VpnCore {
   @override
-  Future<void> connect({required int subscriptionIndex, required int serverIndex}) {
+  Future<void> connect({
+    required int subscriptionIndex,
+    required int serverIndex,
+  }) {
     // TODO: implement connect
     throw UnimplementedError();
   }
-
-  
 }
 
 abstract class VpnCore {
-  Future<void> connect({required int subscriptionIndex, required int serverIndex});
+  Future<void> connect({
+    required int subscriptionIndex,
+    required int serverIndex,
+  });
   Future<void> disconnect();
   String getConnectionStatus();
   void setRoutingRules({required List<RoutingRule> rules});
@@ -137,8 +123,6 @@ abstract class VpnCore {
   void setAutoConnect({required bool enable});
   void setKillSwitch({required bool enable});
 }
-
-
 
 class V2RayCore implements VpnCore {
   final FlutterV2ray _flutterV2ray = FlutterV2ray(
@@ -228,10 +212,11 @@ class V2RayCore implements VpnCore {
         }
         print('Parsed JSON subscription: ${servers.length} servers loaded');
       } else {
-        servers = content
-            .split('\n')
-            .where((line) => line.trim().isNotEmpty)
-            .toList();
+        servers =
+            content
+                .split('\n')
+                .where((line) => line.trim().isNotEmpty)
+                .toList();
         print('Parsed NEWLINE subscription: ${servers.length} servers loaded');
       }
 
@@ -250,8 +235,10 @@ class V2RayCore implements VpnCore {
   }
 
   @override
-  Future<void> connect(
-      {required int subscriptionIndex, required int serverIndex}) async {
+  Future<void> connect({
+    required int subscriptionIndex,
+    required int serverIndex,
+  }) async {
     try {
       if (subscriptionIndex < 0 ||
           subscriptionIndex >= _subscriptionServers.length) {
@@ -266,7 +253,8 @@ class V2RayCore implements VpnCore {
 
       await _flutterV2ray.initializeV2Ray();
 
-      final serverAddress = _subscriptionServers[subscriptionIndex][serverIndex];
+      final serverAddress =
+          _subscriptionServers[subscriptionIndex][serverIndex];
       V2RayURL parser = FlutterV2ray.parseFromURL(serverAddress);
 
       _connectionStatusSubject.add(ConnectionStatus.connecting);
@@ -314,8 +302,7 @@ class V2RayCore implements VpnCore {
       _emitError(ErrorCode.unknownError, 'Invalid subscription index');
       return;
     }
-    if (index < 0 ||
-        index >= _subscriptionServers[subscriptionIndex].length) {
+    if (index < 0 || index >= _subscriptionServers[subscriptionIndex].length) {
       print('Invalid server index');
       _emitError(ErrorCode.unknownError, 'Invalid server index');
       return;
@@ -324,31 +311,40 @@ class V2RayCore implements VpnCore {
     print('Pinging server: $serverAddress');
     try {
       final ping = Ping(serverAddress, count: 3);
-      final pingData =
-          await ping.stream.firstWhere((data) => data.response != null);
+      final pingData = await ping.stream.firstWhere(
+        (data) => data.response != null,
+      );
       if (pingData.response != null) {
         final latency = pingData.response!.time!.inMilliseconds;
         final result = PingResult(
-            subscriptionIndex: subscriptionIndex,
-            serverIndex: index,
-            latencyInMs: latency);
+          subscriptionIndex: subscriptionIndex,
+          serverIndex: index,
+          latencyInMs: latency,
+        );
         _pingResultSubject.add(result);
         print(
-            'Ping result: sub=${result.subscriptionIndex}, server=${result.serverIndex}, latency=${result.latencyInMs} ms');
+          'Ping result: sub=${result.subscriptionIndex}, server=${result.serverIndex}, latency=${result.latencyInMs} ms',
+        );
       } else {
         print('Ping failed: No response');
-        _pingResultSubject.add(PingResult(
+        _pingResultSubject.add(
+          PingResult(
             subscriptionIndex: subscriptionIndex,
             serverIndex: index,
-            latencyInMs: -1));
+            latencyInMs: -1,
+          ),
+        );
         _emitError(ErrorCode.serverUnavailable, 'Ping failed: No response');
       }
     } catch (e) {
       print('Ping error: $e');
-      _pingResultSubject.add(PingResult(
+      _pingResultSubject.add(
+        PingResult(
           subscriptionIndex: subscriptionIndex,
           serverIndex: index,
-          latencyInMs: -1));
+          latencyInMs: -1,
+        ),
+      );
       _emitError(ErrorCode.unknownError, 'Ping error: $e');
     }
   }
@@ -362,22 +358,30 @@ class V2RayCore implements VpnCore {
   List<Server> getServerList() {
     return [
       Server(
-          address: 'server1.com', latency: 50, location: 'USA', isPreferred: true),
+        address: 'server1.com',
+        latency: 50,
+        location: 'USA',
+        isPreferred: true,
+      ),
       Server(
-          address: 'server2.com',
-          latency: 100,
-          location: 'UK',
-          isPreferred: false),
+        address: 'server2.com',
+        latency: 100,
+        location: 'UK',
+        isPreferred: false,
+      ),
       Server(
-          address: 'server3.com',
-          latency: 75,
-          location: 'Canada',
-          isPreferred: false),
+        address: 'server3.com',
+        latency: 75,
+        location: 'Canada',
+        isPreferred: false,
+      ),
     ];
   }
 
   @override
-  Future<void> loadSubscriptions({required List<String> subscriptionLinks}) async {
+  Future<void> loadSubscriptions({
+    required List<String> subscriptionLinks,
+  }) async {
     print('loadSubscriptions: ${subscriptionLinks.join(", ")}');
     _subscriptions.addAll(subscriptionLinks);
     print('Subscriptions added: ${subscriptionLinks.join(", ")}');
@@ -408,7 +412,11 @@ class V2RayCore implements VpnCore {
 
 class OpenVPNCore implements VpnCore {
   @override
-  Future<void> connect({required int subscriptionIndex, required int serverIndex}) {
+  Future<void> connect({
+    required int subscriptionIndex,
+    required int serverIndex,
+  }) {
     // TODO: implement connect
     throw UnimplementedError();
   }
+}

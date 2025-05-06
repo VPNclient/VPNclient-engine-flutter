@@ -1,39 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:flutter_v2ray/flutter_v2ray.dart';
 import 'package:dart_ping/dart_ping.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:vpnclient_engine_flutter/vpnclient_engine_flutter.dart';
 import 'package:vpnclient_engine_flutter/vpnclient_engine/core.dart';
-
-
-
-enum ConnectionStatus {
-  connecting,
-  connected,
-  disconnected,
-  error,
-}
-
-enum ErrorCode {
-  invalidCredentials,
-  serverUnavailable,
-  subscriptionExpired,
-  unknownError,
-}
-
-enum ProxyType {
-  socks5,
-  http,
-}
-
-enum Action {
-  block,
-  allow,
-  routeThroughVPN,
-  direct,
-  proxy,
-}
 
 class Server {
   final String address;
@@ -54,11 +26,7 @@ class SubscriptionDetails {
   final int? dataLimit;
   final int? usedData;
 
-  SubscriptionDetails({
-    this.expiryDate,
-    this.dataLimit,
-    this.usedData,
-  });
+  SubscriptionDetails({this.expiryDate, this.dataLimit, this.usedData});
 }
 
 class SessionStatistics {
@@ -114,18 +82,14 @@ class RoutingRule {
   RoutingRule({this.appName, this.domain, required this.action});
 }
 
-
-
-
 class VPNclientEngine {
   static List<List<String>> _subscriptionServers = [];
   static Map<int, ServerConnection> _connections = {};
   static List<String> _subscriptions = [];
 
-
-
   static final _connectionStatusSubject = BehaviorSubject<ConnectionStatus>();
-  static Stream<ConnectionStatus> get onConnectionStatusChanged => _connectionStatusSubject.stream;
+  static Stream<ConnectionStatus> get onConnectionStatusChanged =>
+      _connectionStatusSubject.stream;
 
   static final _errorSubject = BehaviorSubject<ErrorDetails>();
   static Stream<ErrorDetails> get onError => _errorSubject.stream;
@@ -136,30 +100,31 @@ class VPNclientEngine {
   static final _pingResultSubject = BehaviorSubject<PingResult>();
   static Stream<PingResult> get onPingResult => _pingResultSubject.stream;
 
-  static final _subscriptionLoadedSubject = BehaviorSubject<SubscriptionDetails>();
-  static Stream<SubscriptionDetails> get onSubscriptionLoaded => _subscriptionLoadedSubject.stream;
+  static final _subscriptionLoadedSubject =
+      BehaviorSubject<SubscriptionDetails>();
+  static Stream<SubscriptionDetails> get onSubscriptionLoaded =>
+      _subscriptionLoadedSubject.stream;
 
   static final _dataUsageUpdatedSubject = BehaviorSubject<SessionStatistics>();
-  static Stream<SessionStatistics> get onDataUsageUpdated => _dataUsageUpdatedSubject.stream;
+  static Stream<SessionStatistics> get onDataUsageUpdated =>
+      _dataUsageUpdatedSubject.stream;
 
-  static final _routingRulesAppliedSubject = BehaviorSubject<List<RoutingRule>>();
-  static Stream<List<RoutingRule>> get onRoutingRulesApplied => _routingRulesAppliedSubject.stream;
+  static final _routingRulesAppliedSubject =
+      BehaviorSubject<List<RoutingRule>>();
+  static Stream<List<RoutingRule>> get onRoutingRulesApplied =>
+      _routingRulesAppliedSubject.stream;
 
   static final _killSwitchTriggeredSubject = BehaviorSubject<void>();
-  static Stream<void> get onKillSwitchTriggered => _killSwitchTriggeredSubject.stream;
+  static Stream<void> get onKillSwitchTriggered =>
+      _killSwitchTriggeredSubject.stream;
 
   static VpnCore _vpnCore = V2RayCore();
-  
-
 
   static void _emitError(ErrorCode code, String message) {
     _errorSubject.add(ErrorDetails(errorCode: code, errorMessage: message));
   }
 
-  
-
   static List<String> _subscriptions = [];
-
 
   static void initialize() {
     print('VPNclient Engine initialized');
@@ -184,7 +149,9 @@ class VPNclientEngine {
     print('Subscriptions added: ${subscriptionURLs.join(", ")}');
   }
 
-  static Future<void> updateSubscription({required int subscriptionIndex}) async {
+  static Future<void> updateSubscription({
+    required int subscriptionIndex,
+  }) async {
     if (subscriptionIndex < 0 || subscriptionIndex >= _subscriptions.length) {
       print('Invalid subscription index');
       return;
@@ -215,7 +182,11 @@ class VPNclientEngine {
         print('Parsed JSON subscription: ${servers.length} servers loaded');
       } else {
         // NEWLINE format
-        servers = content.split('\n').where((line) => line.trim().isNotEmpty).toList();
+        servers =
+            content
+                .split('\n')
+                .where((line) => line.trim().isNotEmpty)
+                .toList();
         print('Parsed NEWLINE subscription: ${servers.length} servers loaded');
       }
 
@@ -241,26 +212,31 @@ class VPNclientEngine {
     ProxyConfig? proxyConfig,
   }) async {
     final url = _subscriptionServers[subscriptionIndex][serverIndex];
-    
-    if (url.startsWith('vless://') || url.startsWith('vmess://') || url.startsWith('v2ray://')) {
-        _vpnCore = V2RayCore();
+
+    if (url.startsWith('vless://') ||
+        url.startsWith('vmess://') ||
+        url.startsWith('v2ray://')) {
+      _vpnCore = V2RayCore();
     } else if (url.startsWith('wg://')) {
-        _vpnCore = WireGuardCore();
+      _vpnCore = WireGuardCore();
     } else if (url.startsWith('openvpn://') || url.endsWith('.ovpn')) {
-        _vpnCore = OpenVPNCore();
+      _vpnCore = OpenVPNCore();
     } else {
-        _emitError(ErrorCode.unknownError, 'Unsupported URL format');
-        return;
+      _emitError(ErrorCode.unknownError, 'Unsupported URL format');
+      return;
     }
-    if (serverIndex < 0 || serverIndex >= _subscriptionServers[subscriptionIndex].length) {
+    if (serverIndex < 0 ||
+        serverIndex >= _subscriptionServers[subscriptionIndex].length) {
       _emitError(ErrorCode.unknownError, 'Invalid server index');
       return;
     }
 
-    await _vpnCore.connect(Server(address: _subscriptionServers[subscriptionIndex][serverIndex]), proxyConfig);
+    await _vpnCore.connect(
+      Server(address: _subscriptionServers[subscriptionIndex][serverIndex]),
+      proxyConfig,
+    );
   }
 
-  
   static Future<void> disconnect() async {
     if (_vpnCore == null) {
       _emitError(ErrorCode.unknownError, 'VPN core is not initialized.');
@@ -268,10 +244,7 @@ class VPNclientEngine {
     }
 
     await _vpnCore!.disconnect();
-    
-
   }
-
 
   static void setRoutingRules({required List<RoutingRule> rules}) {
     for (var rule in rules) {
@@ -283,8 +256,12 @@ class VPNclientEngine {
     }
   }
 
-  static void pingServer({required int subscriptionIndex, required int index}) async {
-    if (subscriptionIndex < 0 || subscriptionIndex >= _subscriptionServers.length) {
+  static void pingServer({
+    required int subscriptionIndex,
+    required int index,
+  }) async {
+    if (subscriptionIndex < 0 ||
+        subscriptionIndex >= _subscriptionServers.length) {
       print('Invalid subscription index');
       return;
     }
@@ -294,22 +271,42 @@ class VPNclientEngine {
     }
     final serverAddress = _subscriptionServers[subscriptionIndex][index];
     print('Pinging server: $serverAddress');
-    
+
     try {
       final ping = Ping(serverAddress, count: 3);
-      final pingData = await ping.stream.firstWhere((data) => data.response != null);
+      final pingData = await ping.stream.firstWhere(
+        (data) => data.response != null,
+      );
       if (pingData.response != null) {
         final latency = pingData.response!.time!.inMilliseconds;
-        final result = PingResult(subscriptionIndex: subscriptionIndex, serverIndex: index, latencyInMs: latency);
+        final result = PingResult(
+          subscriptionIndex: subscriptionIndex,
+          serverIndex: index,
+          latencyInMs: latency,
+        );
         _pingResultSubject.add(result);
-        print('Ping result: sub=${result.subscriptionIndex}, server=${result.serverIndex}, latency=${result.latencyInMs} ms');
+        print(
+          'Ping result: sub=${result.subscriptionIndex}, server=${result.serverIndex}, latency=${result.latencyInMs} ms',
+        );
       } else {
         print('Ping failed: No response');
-        _pingResultSubject.add(PingResult(subscriptionIndex: subscriptionIndex, serverIndex: index, latencyInMs: -1)); // Indicate error with -1
+        _pingResultSubject.add(
+          PingResult(
+            subscriptionIndex: subscriptionIndex,
+            serverIndex: index,
+            latencyInMs: -1,
+          ),
+        ); // Indicate error with -1
       }
     } catch (e) {
       print('Ping error: $e');
-      _pingResultSubject.add(PingResult(subscriptionIndex: subscriptionIndex, serverIndex: index, latencyInMs: -1));
+      _pingResultSubject.add(
+        PingResult(
+          subscriptionIndex: subscriptionIndex,
+          serverIndex: index,
+          latencyInMs: -1,
+        ),
+      );
     }
   }
 
@@ -322,19 +319,38 @@ class VPNclientEngine {
     //TODO:
     //Fetches the list of available VPN servers.
     return [
-      Server(address: 'server1.com', latency: 50, location: 'USA', isPreferred: true),
-      Server(address: 'server2.com', latency: 100, location: 'UK', isPreferred: false),
-      Server(address: 'server3.com', latency: 75, location: 'Canada', isPreferred: false),
+      Server(
+        address: 'server1.com',
+        latency: 50,
+        location: 'USA',
+        isPreferred: true,
+      ),
+      Server(
+        address: 'server2.com',
+        latency: 100,
+        location: 'UK',
+        isPreferred: false,
+      ),
+      Server(
+        address: 'server3.com',
+        latency: 75,
+        location: 'Canada',
+        isPreferred: false,
+      ),
     ];
   }
 
-  static Future<void> loadSubscriptions({required List<String> subscriptionLinks}) async {
+  static Future<void> loadSubscriptions({
+    required List<String> subscriptionLinks,
+  }) async {
     print('loadSubscriptions: ${subscriptionLinks.join(", ")}');
     _subscriptions.addAll(subscriptionLinks);
     for (var element in subscriptionLinks) {
-        addSubscription(subscriptionURL: element);
-        await updateSubscription(subscriptionIndex: _subscriptions.indexOf(element));
-      }
+      addSubscription(subscriptionURL: element);
+      await updateSubscription(
+        subscriptionIndex: _subscriptions.indexOf(element),
+      );
+    }
   }
 
   static SessionStatistics getSessionStatistics() {
@@ -353,5 +369,4 @@ class VPNclientEngine {
   static void setKillSwitch({required bool enable}) {
     print('setKillSwitch: $enable');
   }
-
 }
