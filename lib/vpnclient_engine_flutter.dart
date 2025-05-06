@@ -25,9 +25,11 @@ abstract class VpnclientEngineFlutterPlatform {
       } else {
         _instance = VpnclientEngineFlutterPlatform();
         print(
-            'VPNclientEngineFlutter: Warning: Platform not yet supported, fallback to default implementation');
-        print('Please report this platform ${Platform.operatingSystem} on https://github.com/VPNclient/vpnclient_engine_flutter/issues');
-        
+          'VPNclientEngineFlutter: Warning: Platform not yet supported, fallback to default implementation',
+        );
+        print(
+          'Please report this platform ${Platform.operatingSystem} on https://github.com/VPNclient/vpnclient_engine_flutter/issues',
+        );
       }
     }
     return _instance!;
@@ -35,23 +37,20 @@ abstract class VpnclientEngineFlutterPlatform {
 
   Future<String?> getPlatformVersion();
 
-  Future<void> connect({
-    required String url,
-  });
+  Future<void> connect({required String url});
 
   Future<void> disconnect();
 
   void sendStatus(ConnectionStatus status) {
-      print("default: $status");
+    print("default: $status");
   }
 
   void sendError(ErrorCode errorCode, String errorMessage) {
-      print("default: $errorCode $errorMessage");
+    print("default: $errorCode $errorMessage");
   }
 }
 
 class VpnclientEngineFlutter extends VpnclientEngineFlutterPlatform {
-
   @override
   Future<void> connect({required String url}) async {
     return Future.value();
