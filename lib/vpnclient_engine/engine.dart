@@ -6,6 +6,9 @@ import 'package:dart_ping/dart_ping.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:vpnclient_engine_flutter/vpnclient_engine_flutter.dart';
 import 'package:vpnclient_engine_flutter/vpnclient_engine/core.dart';
+import 'package:vpnclient_engine_flutter/vpnclient_engine/protocols/openvpn.dart';
+import 'package:vpnclient_engine_flutter/vpnclient_engine/protocols/v2ray.dart';
+import 'package:vpnclient_engine_flutter/vpnclient_engine/protocols/wireguard.dart';
 
 enum Action { block, allow, routeThroughVPN, direct, proxy }
 
@@ -131,7 +134,7 @@ class VPNclientEngine {
     _vpnCore ??= V2RayCore();
   }
 
-  static void ClearSubscriptions() {
+  static void clearSubscriptions() {
     _subscriptions.clear();
     print('All subscriptions cleared');
   }
