@@ -4,92 +4,15 @@ import 'package:http/http.dart' as http;
 import 'package:flutter_v2ray/flutter_v2ray.dart';
 import 'package:dart_ping/dart_ping.dart';
 import 'package:rxdart/rxdart.dart';
-import 'package:vpnclient_engine_flutter/vpnclient_engine_flutter.dart';
 import 'package:vpnclient_engine_flutter/vpnclient_engine/core.dart';
-import 'package:vpnclient_engine_flutter/vpnclient_engine/protocols/openvpn.dart';
+//import 'package:vpnclient_engine_flutter/vpnclient_engine/protocols/openvpn.dart';
 import 'package:vpnclient_engine_flutter/vpnclient_engine/protocols/v2ray.dart';
-import 'package:vpnclient_engine_flutter/vpnclient_engine/protocols/wireguard.dart';
+//import 'package:vpnclient_engine_flutter/vpnclient_engine/protocols/wireguard.dart';
 
-enum Action { block, allow, routeThroughVPN, direct, proxy }
-
-class Server {
-  final String address;
-  final int? latency;
-  final String? location;
-  final bool? isPreferred;
-
-  Server({
-    required this.address,
-    this.latency,
-    this.location,
-    this.isPreferred,
-  });
-}
-
-class SubscriptionDetails {
-  final DateTime? expiryDate;
-  final int? dataLimit;
-  final int? usedData;
-
-  SubscriptionDetails({this.expiryDate, this.dataLimit, this.usedData});
-}
-
-class SessionStatistics {
-  final Duration? sessionDuration;
-  final int dataInBytes;
-  final int dataOutBytes;
-
-  SessionStatistics({
-    this.sessionDuration,
-    required this.dataInBytes,
-    required this.dataOutBytes,
-  });
-}
-
-class ErrorDetails {
-  final ErrorCode errorCode;
-  final String errorMessage;
-
-  ErrorDetails({required this.errorCode, required this.errorMessage});
-}
-
-class ProxyConfig {
-  final ProxyType type;
-  final String address;
-  final int port;
-  final String? credentials;
-
-  ProxyConfig({
-    required this.type,
-    required this.address,
-    required this.port,
-    this.credentials,
-  });
-}
-
-class PingResult {
-  final int subscriptionIndex;
-  final int serverIndex;
-  final int latencyInMs;
-
-  PingResult({
-    required this.subscriptionIndex,
-    required this.serverIndex,
-    required this.latencyInMs,
-  });
-}
-
-class RoutingRule {
-  final String? appName;
-  final String? domain;
-  final String action; // proxy, direct, block
-
-  RoutingRule({this.appName, this.domain, required this.action});
-}
+export 'package:vpnclient_engine_flutter/vpnclient_engine/core.dart';
 
 class VPNclientEngine {
   static List<List<String>> _subscriptionServers = [];
-  static Map<int, ServerConnection> _connections = {};
   static List<String> _subscriptions = [];
 
   static final _connectionStatusSubject = BehaviorSubject<ConnectionStatus>();
@@ -217,10 +140,10 @@ class VPNclientEngine {
         url.startsWith('vmess://') ||
         url.startsWith('v2ray://')) {
       _vpnCore = V2RayCore();
-    } else if (url.startsWith('wg://')) {
-      _vpnCore = WireGuardCore();
-    } else if (url.startsWith('openvpn://') || url.endsWith('.ovpn')) {
-      _vpnCore = OpenVPNCore();
+    //} else if (url.startsWith('wg://')) {
+      //_vpnCore = WireGuardCore();
+    //} else if (url.startsWith('openvpn://') || url.endsWith('.ovpn')) {
+      //_vpnCore = OpenVPNCore();
     } else {
       _emitError(ErrorCode.unknownError, 'Unsupported URL format');
       return;
@@ -232,8 +155,8 @@ class VPNclientEngine {
     }
 
     await _vpnCore.connect(
-      Server(address: _subscriptionServers[subscriptionIndex][serverIndex]),
-      proxyConfig,
+      subscriptionIndex: subscriptionIndex,
+      serverIndex: serverIndex,
     );
   }
 
