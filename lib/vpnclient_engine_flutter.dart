@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'dart:io' show Platform;
 
+import 'vpnclient_engine/engine.dart';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:vpnclient_engine_flutter/platforms/ios.dart';
 import 'package:flutter/services.dart';
 import 'package:vpnclient_engine_flutter/platforms/android.dart';
-
-import 'vpnclient_engine/engine.dart';
 
 export 'vpnclient_engine/core.dart';
 export 'vpnclient_engine/engine.dart';
