@@ -50,7 +50,7 @@ class VpnclientEngineFlutterPlugin :
         try {
             singboxCore = SingBoxCore(config)
         } catch (e: Exception) {
-            Log.e(packageName, "Failed to initialize sing-box", e)
+            Log.e(context.packageName, "Failed to initialize sing-box", e)
         }
     }
 
@@ -69,7 +69,7 @@ class VpnclientEngineFlutterPlugin :
             singboxCore?.start()
             result.success(true)
         } catch (e: Exception) {
-            Log.e(packageName, "Failed to start sing-box", e)
+            Log.e(context.packageName, "Failed to start sing-box", e)
             result.error("START_ERROR", "Failed to start sing-box", e.message)
         }
     }
@@ -87,7 +87,7 @@ class VpnclientEngineFlutterPlugin :
             singboxCore = null // Release sing-box instance after stopping
             result.success(true)
         } catch (e: Exception) {
-            Log.e(packageName, "Failed to stop sing-box", e)
+            Log.e(context.packageName, "Failed to stop sing-box", e)
             result.error("STOP_ERROR", "Failed to stop sing-box", e.message)
         }
     }
@@ -100,7 +100,7 @@ class VpnclientEngineFlutterPlugin :
             val status = singboxCore?.getStatus() ?: "stopped"
             result.success(status)
         } catch (e: Exception) {
-            Log.e(packageName, "Failed to get sing-box status", e)
+            Log.e(context.packageName, "Failed to get sing-box status", e)
             result.error(
                 "STATUS_ERROR",
                 "Failed to get sing-box status",
@@ -128,7 +128,7 @@ class SingBoxCore(
             // Load the sing-box configuration from the provided string
             Singbox.setConfig(config)
         } catch (e: Exception) {
-            Log.e(packageName, "Error initializing SingBox: ${e.message}")
+            Log.e(context.packageName, "Error initializing SingBox: ${e.message}")
             throw e
         }
     }
@@ -145,7 +145,7 @@ class SingBoxCore(
                 throw Exception("Error starting SingBox: $err")
             }
         } catch (e: Exception) {
-            Log.e(packageName, "Error starting SingBox: ${e.message}")
+            Log.e(context.packageName, "Error starting SingBox: ${e.message}")
             throw e
         }
     }
@@ -159,7 +159,7 @@ class SingBoxCore(
             // Stop the SingBox core
             Singbox.stop()
         } catch (e: Exception) {
-            Log.e(packageName, "Error stopping SingBox: ${e.message}")
+            Log.e(context.packageName, "Error stopping SingBox: ${e.message}")
             throw e
         }
     }
