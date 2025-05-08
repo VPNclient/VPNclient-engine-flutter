@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 
 enum ConnectionStatus { connecting, connected, disconnected, error }
 

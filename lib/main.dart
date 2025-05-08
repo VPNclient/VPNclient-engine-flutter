@@ -1,16 +1,18 @@
 import 'dart:async';
-import 'vpnclient_engine/engine.dart';
+import 'dart:developer';
+
+import 'package:vpnclient_engine_flutter/client/engine.dart';
 
 void main() async {
   VPNclientEngine.initialize();
-  VPNclientEngine.ClearSubscriptions();
+  VPNclientEngine.clearSubscriptions();
   VPNclientEngine.addSubscription(
     subscriptionURL: "https://pastebin.com/raw/ZCYiJ98W",
   );
   await VPNclientEngine.updateSubscription(subscriptionIndex: 0);
 
   VPNclientEngine.onConnectionStatusChanged.listen((status) {
-    print("Connection status: $status");
+    log("Connection status: $status");
   });
 
   await VPNclientEngine.connect(subscriptionIndex: 0, serverIndex: 1);
@@ -26,7 +28,7 @@ void main() async {
   VPNclientEngine.pingServer(subscriptionIndex: 0, index: 1);
 
   VPNclientEngine.onPingResult.listen((result) {
-    print("Ping result: ${result.latencyInMs} ms");
+    log("Ping result: ${result.latencyInMs} ms");
   });
 
   await Future.delayed(Duration(seconds: 10));
