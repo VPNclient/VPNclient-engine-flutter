@@ -1,6 +1,6 @@
 name: vpnclient_engine_flutter
 description: "VPN Client Engine Flutter plugin"
-version: 0.0.1
+version: 1.0.5+10
 homepage: "https://vpnclient.click"
 
 environment:

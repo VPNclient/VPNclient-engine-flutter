@@ -1,0 +1,34 @@
+PODS:
+  - Flutter (1.0.0)
+  - flutter_v2ray (0.0.1):
+    - Flutter
+  - integration_test (0.0.1):
+    - Flutter
+  - vpnclient_engine_flutter (0.0.1):
+    - Flutter
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - flutter_v2ray (from `.symlinks/plugins/flutter_v2ray/ios`)
+  - integration_test (from `.symlinks/plugins/integration_test/ios`)
+  - vpnclient_engine_flutter (from `.symlinks/plugins/vpnclient_engine_flutter/ios`)
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  flutter_v2ray:
+    :path: ".symlinks/plugins/flutter_v2ray/ios"
+  integration_test:
+    :path: ".symlinks/plugins/integration_test/ios"
+  vpnclient_engine_flutter:
+    :path: ".symlinks/plugins/vpnclient_engine_flutter/ios"
+
+SPEC CHECKSUMS:
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  flutter_v2ray: 1190bb389b67a1dc9f28ece1d4b308101e38395e
+  integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
+  vpnclient_engine_flutter: e73bc2cc4b57bcb1ea64169bc7782f20a5968217
+
+PODFILE CHECKSUM: 4305caec6b40dde0ae97be1573c53de1882a07e5
+
+COCOAPODS: 1.16.2

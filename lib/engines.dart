@@ -1,3 +1,5 @@
+import 'package:flutter/services.dart';
+
 // Enum for available engines
 enum VpnEngine { flutterV2ray, singBox, libXray }
 
@@ -18,55 +20,112 @@ class VpnEngineFactory {
 
 // Stub for SingBox engine
 class SingBoxCore implements VpnCore {
+  static const MethodChannel _channel = MethodChannel('vpnclient_engine_flutter');
+
+  String _status = 'disconnected';
+  String? _lastConfig;
+
+  // Пример генерации простого конфига для shadowsocks
+  String _generateConfig(String serverUrl) {
+    // TODO: Парсить serverUrl и генерировать корректный конфиг
+    // Здесь пример для shadowsocks:
+    return '''
+{
+  "log": { "level": "info" },
+  "dns": { "servers": [{ "address": "8.8.8.8" }] },
+  "inbounds": [
+    {
+      "type": "tun",
+      "inet4_address": "172.19.0.1/30",
+      "mtu": 9000
+    }
+  ],
+  "outbounds": [
+    {
+      "type": "shadowsocks",
+      "server": "example.com",
+      "server_port": 8388,
+      "method": "2022-blake3-aes-128-gcm",
+      "password": "password"
+    },
+    { "type": "direct" },
+    { "type": "dns", "tag": "dns-out" }
+  ],
+  "route": {
+    "rules": [
+      { "port": 53, "outbound": "dns-out" }
+    ]
+  }
+}
+''';
+  }
+
   @override
   Future<void> connect({required int subscriptionIndex, required int serverIndex}) async {
-    // TODO: Implement connection using sing-box engine
-    throw UnimplementedError();
+    // TODO: получить serverUrl из списка серверов/подписок
+    final serverUrl = "shadowsocks://example.com:8388?method=2022-blake3-aes-128-gcm&password=password";
+    final config = _generateConfig(serverUrl);
+    _lastConfig = config;
+    try {
+      await _channel.invokeMethod('startVPN', {'config': config});
+      _status = 'connecting';
+    } catch (e) {
+      _status = 'error';
+      rethrow;
+    }
   }
+
   @override
   Future<void> disconnect() async {
-    // TODO: Implement disconnect using sing-box engine
-    throw UnimplementedError();
+    try {
+      await _channel.invokeMethod('stopVPN');
+      _status = 'disconnected';
+    } catch (e) {
+      _status = 'error';
+      rethrow;
+    }
   }
+
   @override
   String getConnectionStatus() {
-    // TODO: Implement status retrieval
-    throw UnimplementedError();
+    return _status;
   }
+
   @override
   void setRoutingRules({required List<RoutingRule> rules}) {
-    // TODO: Implement routing rules
-    throw UnimplementedError();
+    // TODO: реализовать если нужно
   }
+
   @override
   SessionStatistics getSessionStatistics() {
-    // TODO: Implement statistics
-    throw UnimplementedError();
+    // TODO: реализовать если нужно
+    return SessionStatistics(dataInBytes: 0, dataOutBytes: 0);
   }
+
   @override
   Future<void> loadSubscriptions({required List<String> subscriptionLinks}) async {
-    // TODO: Implement subscription loading
-    throw UnimplementedError();
+    // TODO: реализовать если нужно
   }
+
   @override
   void pingServer({required int subscriptionIndex, required int index}) {
-    // TODO: Implement ping
-    throw UnimplementedError();
+    // TODO: реализовать если нужно
   }
+
   @override
   List<Server> getServerList() {
-    // TODO: Implement server list
-    throw UnimplementedError();
+    // TODO: реализовать если нужно
+    return [];
   }
+
   @override
   void setAutoConnect({required bool enable}) {
-    // TODO: Implement auto-connect
-    throw UnimplementedError();
+    // TODO: реализовать если нужно
   }
+
   @override
   void setKillSwitch({required bool enable}) {
-    // TODO: Implement Kill Switch
-    throw UnimplementedError();
+    // TODO: реализовать если нужно
   }
 }
 
