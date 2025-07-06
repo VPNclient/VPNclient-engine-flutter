@@ -1,17 +1,19 @@
 import 'dart:async';
 import 'dart:io' show Platform;
 
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:vpnclient_engine_flutter/platforms/ios.dart';
-import 'package:flutter/services.dart';
 import 'package:vpnclient_engine_flutter/platforms/android.dart';
 
 import 'vpnclient_engine/engine.dart';
+import 'vpnclient_engine/core.dart';
 
-export 'vpnclient_engine/core.dart';
 export 'vpnclient_engine/engine.dart';
+
+// Simple logger for production code
+void _log(String message) {
+  // ignore: avoid_print
+  print('VpnclientEngineFlutter: $message');
+}
 
 abstract class VpnclientEngineFlutterPlatform {
   static VpnclientEngineFlutterPlatform? _instance;
@@ -23,11 +25,11 @@ abstract class VpnclientEngineFlutterPlatform {
       } else if (Platform.isIOS) {
         _instance = IosVpnclientEngineFlutter();
       } else {
-        _instance = VpnclientEngineFlutterPlatform();
-        print(
+        _instance = VpnclientEngineFlutter();
+        _log(
           'VPNclientEngineFlutter: Warning: Platform not yet supported, fallback to default implementation',
         );
-        print(
+        _log(
           'Please report this platform ${Platform.operatingSystem} on https://github.com/VPNclient/vpnclient_engine_flutter/issues',
         );
       }
@@ -42,11 +44,11 @@ abstract class VpnclientEngineFlutterPlatform {
   Future<void> disconnect();
 
   void sendStatus(ConnectionStatus status) {
-    print("default: $status");
+    _log("default: $status");
   }
 
   void sendError(ErrorCode errorCode, String errorMessage) {
-    print("default: $errorCode $errorMessage");
+    _log("default: $errorCode $errorMessage");
   }
 }
 
@@ -59,5 +61,11 @@ class VpnclientEngineFlutter extends VpnclientEngineFlutterPlatform {
   @override
   Future<String?> getPlatformVersion() async {
     return "Platform not yet supported";
+  }
+
+  @override
+  Future<void> disconnect() async {
+    _log('VpnclientEngineFlutter: disconnect called');
+    // TODO: implement disconnect
   }
 }
