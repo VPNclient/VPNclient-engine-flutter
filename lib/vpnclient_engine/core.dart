@@ -2,12 +2,16 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:dart_ping/dart_ping.dart';
-import 'package:vpnclient_engine_flutter/vpnclient_engine/core.dart';
-
-import 'package:flutter/foundation.dart';
-import 'package:vpnclient_engine_flutter/vpnclient_engine_flutter_platform_interface.dart';
 import 'package:flutter_v2ray/flutter_v2ray.dart';
 import 'package:rxdart/rxdart.dart';
+
+// Simple logger for production code
+void _log(String message) {
+  // In production, this could be replaced with a proper logging framework
+  // For now, we'll keep print for development but mark it as intentional
+  // ignore: avoid_print
+  print('VPNClientEngine: $message');
+}
 
 enum ConnectionStatus { connecting, connected, disconnected, error }
 
@@ -102,9 +106,55 @@ class WireGuardCore implements VpnCore {
   Future<void> connect({
     required int subscriptionIndex,
     required int serverIndex,
-  }) {
-    // TODO: implement connect
-    throw UnimplementedError();
+  }) async {
+    _log('WireGuardCore: connect called');
+    // TODO: implement WireGuard connection
+  }
+
+  @override
+  Future<void> disconnect() async {
+    _log('WireGuardCore: disconnect called');
+    // TODO: implement WireGuard disconnection
+  }
+
+  @override
+  String getConnectionStatus() {
+    return 'disconnected';
+  }
+
+  @override
+  void setRoutingRules({required List<RoutingRule> rules}) {
+    _log('WireGuardCore: setRoutingRules called');
+  }
+
+  @override
+  SessionStatistics getSessionStatistics() {
+    return SessionStatistics(dataInBytes: 0, dataOutBytes: 0);
+  }
+
+  @override
+  Future<void> loadSubscriptions({required List<String> subscriptionLinks}) async {
+    _log('WireGuardCore: loadSubscriptions called');
+  }
+
+  @override
+  void pingServer({required int subscriptionIndex, required int index}) {
+    _log('WireGuardCore: pingServer called');
+  }
+
+  @override
+  List<Server> getServerList() {
+    return [];
+  }
+
+  @override
+  void setAutoConnect({required bool enable}) {
+    _log('WireGuardCore: setAutoConnect called');
+  }
+
+  @override
+  void setKillSwitch({required bool enable}) {
+    _log('WireGuardCore: setKillSwitch called');
   }
 }
 
@@ -130,8 +180,8 @@ class V2RayCore implements VpnCore {
       // do something
     },
   );
-  List<List<String>> _subscriptionServers = [];
-  List<String> _subscriptions = [];
+  final List<List<String>> _subscriptionServers = [];
+  final List<String> _subscriptions = [];
 
   final _connectionStatusSubject = BehaviorSubject<ConnectionStatus>();
   Stream<ConnectionStatus> get onConnectionStatusChanged =>
@@ -166,38 +216,38 @@ class V2RayCore implements VpnCore {
   }
 
   void initialize() {
-    print('V2RayCore initialized');
+    _log('V2RayCore initialized');
   }
 
   void clearSubscriptions() {
     _subscriptions.clear();
-    print('All subscriptions cleared');
+    _log('All subscriptions cleared');
   }
 
   void addSubscription({required String subscriptionURL}) {
     _subscriptions.add(subscriptionURL);
-    print('Subscription added: $subscriptionURL');
+    _log('Subscription added: $subscriptionURL');
   }
 
   void addSubscriptions({required List<String> subscriptionURLs}) {
     _subscriptions.addAll(subscriptionURLs);
-    print('Subscriptions added: ${subscriptionURLs.join(", ")}');
+    _log('Subscriptions added: ${subscriptionURLs.join(", ")}');
   }
 
   Future<void> updateSubscription({required int subscriptionIndex}) async {
     if (subscriptionIndex < 0 || subscriptionIndex >= _subscriptions.length) {
-      print('Invalid subscription index');
+      _log('Invalid subscription index');
       return;
     }
 
     final url = _subscriptions[subscriptionIndex];
-    print('Fetching subscription data from: $url');
+    _log('Fetching subscription data from: $url');
 
     try {
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode != 200) {
-        print('Failed to fetch subscription: HTTP ${response.statusCode}');
+        _log('Failed to fetch subscription: HTTP ${response.statusCode}');
         return;
       }
 
@@ -210,14 +260,14 @@ class V2RayCore implements VpnCore {
         for (var server in jsonList) {
           servers.add(server.toString());
         }
-        print('Parsed JSON subscription: ${servers.length} servers loaded');
+        _log('Parsed JSON subscription: ${servers.length} servers loaded');
       } else {
         servers =
             content
                 .split('\n')
                 .where((line) => line.trim().isNotEmpty)
                 .toList();
-        print('Parsed NEWLINE subscription: ${servers.length} servers loaded');
+        _log('Parsed NEWLINE subscription: ${servers.length} servers loaded');
       }
 
       while (_subscriptionServers.length <= subscriptionIndex) {
@@ -227,9 +277,9 @@ class V2RayCore implements VpnCore {
       _subscriptionServers[subscriptionIndex] = servers;
       _subscriptionLoadedSubject.add(SubscriptionDetails());
 
-      print('Subscription #$subscriptionIndex servers updated successfully');
+      _log('Subscription #$subscriptionIndex servers updated successfully');
     } catch (e) {
-      print('Error updating subscription: $e');
+      _log('Error updating subscription: $e');
       _emitError(ErrorCode.unknownError, 'Error updating subscription: $e');
     }
   }
@@ -242,12 +292,12 @@ class V2RayCore implements VpnCore {
     try {
       if (subscriptionIndex < 0 ||
           subscriptionIndex >= _subscriptionServers.length) {
-        print('Invalid subscription index');
+        _log('Invalid subscription index');
         return;
       }
       if (serverIndex < 0 ||
           serverIndex >= _subscriptionServers[subscriptionIndex].length) {
-        print('Invalid server index');
+        _log('Invalid server index');
         return;
       }
 
@@ -269,7 +319,7 @@ class V2RayCore implements VpnCore {
       }
       _serverSwitchedSubject.add(serverAddress);
       _connectionStatusSubject.add(ConnectionStatus.connected);
-      print('Successfully connected');
+      _log('Successfully connected');
     } catch (e) {
       _emitError(ErrorCode.unknownError, 'Error connecting: $e');
       _connectionStatusSubject.add(ConnectionStatus.error);
@@ -280,16 +330,16 @@ class V2RayCore implements VpnCore {
   Future<void> disconnect() async {
     _flutterV2ray.stopV2Ray();
     _connectionStatusSubject.add(ConnectionStatus.disconnected);
-    print('Disconnected successfully');
+    _log('Disconnected successfully');
   }
 
   @override
   void setRoutingRules({required List<RoutingRule> rules}) {
     for (var rule in rules) {
       if (rule.appName != null) {
-        print('Routing rule for app ${rule.appName}: ${rule.action}');
+        _log('Routing rule for app ${rule.appName}: ${rule.action}');
       } else if (rule.domain != null) {
-        print('Routing rule for domain ${rule.domain}: ${rule.action}');
+        _log('Routing rule for domain ${rule.domain}: ${rule.action}');
       }
     }
   }
@@ -298,17 +348,17 @@ class V2RayCore implements VpnCore {
   void pingServer({required int subscriptionIndex, required int index}) async {
     if (subscriptionIndex < 0 ||
         subscriptionIndex >= _subscriptionServers.length) {
-      print('Invalid subscription index');
+      _log('Invalid subscription index');
       _emitError(ErrorCode.unknownError, 'Invalid subscription index');
       return;
     }
     if (index < 0 || index >= _subscriptionServers[subscriptionIndex].length) {
-      print('Invalid server index');
+      _log('Invalid server index');
       _emitError(ErrorCode.unknownError, 'Invalid server index');
       return;
     }
     final serverAddress = _subscriptionServers[subscriptionIndex][index];
-    print('Pinging server: $serverAddress');
+    _log('Pinging server: $serverAddress');
     try {
       final ping = Ping(serverAddress, count: 3);
       final pingData = await ping.stream.firstWhere(
@@ -322,11 +372,11 @@ class V2RayCore implements VpnCore {
           latencyInMs: latency,
         );
         _pingResultSubject.add(result);
-        print(
+        _log(
           'Ping result: sub=${result.subscriptionIndex}, server=${result.serverIndex}, latency=${result.latencyInMs} ms',
         );
       } else {
-        print('Ping failed: No response');
+        _log('Ping failed: No response');
         _pingResultSubject.add(
           PingResult(
             subscriptionIndex: subscriptionIndex,
@@ -337,7 +387,7 @@ class V2RayCore implements VpnCore {
         _emitError(ErrorCode.serverUnavailable, 'Ping failed: No response');
       }
     } catch (e) {
-      print('Ping error: $e');
+      _log('Ping error: $e');
       _pingResultSubject.add(
         PingResult(
           subscriptionIndex: subscriptionIndex,
@@ -382,9 +432,9 @@ class V2RayCore implements VpnCore {
   Future<void> loadSubscriptions({
     required List<String> subscriptionLinks,
   }) async {
-    print('loadSubscriptions: ${subscriptionLinks.join(", ")}');
+    _log('loadSubscriptions: ${subscriptionLinks.join(", ")}');
     _subscriptions.addAll(subscriptionLinks);
-    print('Subscriptions added: ${subscriptionLinks.join(", ")}');
+    _log('Subscriptions added: ${subscriptionLinks.join(", ")}');
     for (var index = 0; index < subscriptionLinks.length; index++) {
       await updateSubscription(subscriptionIndex: index);
     }
@@ -401,12 +451,12 @@ class V2RayCore implements VpnCore {
 
   @override
   void setAutoConnect({required bool enable}) {
-    print('setAutoConnect: $enable');
+    _log('setAutoConnect: $enable');
   }
 
   @override
   void setKillSwitch({required bool enable}) {
-    print('setKillSwitch: $enable');
+    _log('setKillSwitch: $enable');
   }
 }
 
@@ -415,8 +465,54 @@ class OpenVPNCore implements VpnCore {
   Future<void> connect({
     required int subscriptionIndex,
     required int serverIndex,
-  }) {
-    // TODO: implement connect
-    throw UnimplementedError();
+  }) async {
+    _log('OpenVPNCore: connect called');
+    // TODO: implement OpenVPN connection
+  }
+
+  @override
+  Future<void> disconnect() async {
+    _log('OpenVPNCore: disconnect called');
+    // TODO: implement OpenVPN disconnection
+  }
+
+  @override
+  String getConnectionStatus() {
+    return 'disconnected';
+  }
+
+  @override
+  void setRoutingRules({required List<RoutingRule> rules}) {
+    _log('OpenVPNCore: setRoutingRules called');
+  }
+
+  @override
+  SessionStatistics getSessionStatistics() {
+    return SessionStatistics(dataInBytes: 0, dataOutBytes: 0);
+  }
+
+  @override
+  Future<void> loadSubscriptions({required List<String> subscriptionLinks}) async {
+    _log('OpenVPNCore: loadSubscriptions called');
+  }
+
+  @override
+  void pingServer({required int subscriptionIndex, required int index}) {
+    _log('OpenVPNCore: pingServer called');
+  }
+
+  @override
+  List<Server> getServerList() {
+    return [];
+  }
+
+  @override
+  void setAutoConnect({required bool enable}) {
+    _log('OpenVPNCore: setAutoConnect called');
+  }
+
+  @override
+  void setKillSwitch({required bool enable}) {
+    _log('OpenVPNCore: setKillSwitch called');
   }
 }

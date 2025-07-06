@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
 import 'package:vpnclient_engine_flutter/vpnclient_engine_flutter.dart';
 import 'package:vpnclient_engine_flutter/vpnclient_engine/engine.dart';
 

@@ -1,91 +1,25 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-import 'package:flutter_v2ray/flutter_v2ray.dart';
 import 'package:dart_ping/dart_ping.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:vpnclient_engine_flutter/vpnclient_engine_flutter.dart';
 import 'package:vpnclient_engine_flutter/vpnclient_engine/core.dart';
 
-class Server {
-  final String address;
-  final int? latency;
-  final String? location;
-  final bool? isPreferred;
+// Re-export core types for convenience
+export 'package:vpnclient_engine_flutter/vpnclient_engine/core.dart';
 
-  Server({
-    required this.address,
-    this.latency,
-    this.location,
-    this.isPreferred,
-  });
-}
-
-class SubscriptionDetails {
-  final DateTime? expiryDate;
-  final int? dataLimit;
-  final int? usedData;
-
-  SubscriptionDetails({this.expiryDate, this.dataLimit, this.usedData});
-}
-
-class SessionStatistics {
-  final Duration? sessionDuration;
-  final int dataInBytes;
-  final int dataOutBytes;
-
-  SessionStatistics({
-    this.sessionDuration,
-    required this.dataInBytes,
-    required this.dataOutBytes,
-  });
-}
-
-class ErrorDetails {
-  final ErrorCode errorCode;
-  final String errorMessage;
-
-  ErrorDetails({required this.errorCode, required this.errorMessage});
-}
-
-class ProxyConfig {
-  final ProxyType type;
-  final String address;
-  final int port;
-  final String? credentials;
-
-  ProxyConfig({
-    required this.type,
-    required this.address,
-    required this.port,
-    this.credentials,
-  });
-}
-
-class PingResult {
-  final int subscriptionIndex;
-  final int serverIndex;
-  final int latencyInMs;
-
-  PingResult({
-    required this.subscriptionIndex,
-    required this.serverIndex,
-    required this.latencyInMs,
-  });
-}
-
-class RoutingRule {
-  final String? appName;
-  final String? domain;
-  final String action; // proxy, direct, block
-
-  RoutingRule({this.appName, this.domain, required this.action});
+// Simple logger for production code
+void _log(String message) {
+  // In production, this could be replaced with a proper logging framework
+  // For now, we'll keep print for development but mark it as intentional
+  // ignore: avoid_print
+  print('VPNClientEngine: $message');
 }
 
 class VPNclientEngine {
-  static List<List<String>> _subscriptionServers = [];
-  static Map<int, ServerConnection> _connections = {};
-  static List<String> _subscriptions = [];
+  static final List<List<String>> _subscriptionServers = [];
+  static final List<String> _subscriptions = [];
 
   static final _connectionStatusSubject = BehaviorSubject<ConnectionStatus>();
   static Stream<ConnectionStatus> get onConnectionStatusChanged =>
@@ -124,48 +58,44 @@ class VPNclientEngine {
     _errorSubject.add(ErrorDetails(errorCode: code, errorMessage: message));
   }
 
-  static List<String> _subscriptions = [];
-
   static void initialize() {
-    print('VPNclient Engine initialized');
-    if (_vpnCore == null) {
-      // Default core is V2Ray
-      _vpnCore = V2RayCore();
-    }
+    _log('VPNclient Engine initialized');
+    // Default core is V2Ray
+    _vpnCore = V2RayCore();
   }
 
-  static void ClearSubscriptions() {
+  static void clearSubscriptions() {
     _subscriptions.clear();
-    print('All subscriptions cleared');
+    _log('All subscriptions cleared');
   }
 
   static void addSubscription({required String subscriptionURL}) {
     _subscriptions.add(subscriptionURL);
-    print('Subscription added: $subscriptionURL');
+    _log('Subscription added: $subscriptionURL');
   }
 
   static void addSubscriptions({required List<String> subscriptionURLs}) {
     _subscriptions.addAll(subscriptionURLs);
-    print('Subscriptions added: ${subscriptionURLs.join(", ")}');
+    _log('Subscriptions added: ${subscriptionURLs.join(", ")}');
   }
 
   static Future<void> updateSubscription({
     required int subscriptionIndex,
   }) async {
     if (subscriptionIndex < 0 || subscriptionIndex >= _subscriptions.length) {
-      print('Invalid subscription index');
+      _log('Invalid subscription index');
       return;
     }
 
     final url = _subscriptions[subscriptionIndex];
-    print('Fetching subscription data from: $url');
+    _log('Fetching subscription data from: $url');
 
     try {
       //Сейчас при поднятом VPN обновление подписки пойдет через туннель. Позже необходимо реализовать разные механизмы обновления (только через туннель/только напрямую/комбинированный)
       final response = await http.get(Uri.parse(url));
 
       if (response.statusCode != 200) {
-        print('Failed to fetch subscription: HTTP ${response.statusCode}');
+        _log('Failed to fetch subscription: HTTP ${response.statusCode}');
         return;
       }
 
@@ -179,7 +109,7 @@ class VPNclientEngine {
         for (var server in jsonList) {
           servers.add(server.toString());
         }
-        print('Parsed JSON subscription: ${servers.length} servers loaded');
+        _log('Parsed JSON subscription: ${servers.length} servers loaded');
       } else {
         // NEWLINE format
         servers =
@@ -187,7 +117,7 @@ class VPNclientEngine {
                 .split('\n')
                 .where((line) => line.trim().isNotEmpty)
                 .toList();
-        print('Parsed NEWLINE subscription: ${servers.length} servers loaded');
+        _log('Parsed NEWLINE subscription: ${servers.length} servers loaded');
       }
 
       // Ensure the servers list matches the subscriptions list size
@@ -199,9 +129,9 @@ class VPNclientEngine {
       _subscriptionServers[subscriptionIndex] = servers;
       _subscriptionLoadedSubject.add(SubscriptionDetails());
 
-      print('Subscription #$subscriptionIndex servers updated successfully');
+      _log('Subscription #$subscriptionIndex servers updated successfully');
     } catch (e) {
-      print('Error updating subscription: $e');
+      _log('Error updating subscription: $e');
       _emitError(ErrorCode.unknownError, 'Error updating subscription: $e');
     }
   }
@@ -232,26 +162,21 @@ class VPNclientEngine {
     }
 
     await _vpnCore.connect(
-      Server(address: _subscriptionServers[subscriptionIndex][serverIndex]),
-      proxyConfig,
+      subscriptionIndex: subscriptionIndex,
+      serverIndex: serverIndex,
     );
   }
 
   static Future<void> disconnect() async {
-    if (_vpnCore == null) {
-      _emitError(ErrorCode.unknownError, 'VPN core is not initialized.');
-      return;
-    }
-
-    await _vpnCore!.disconnect();
+    await _vpnCore.disconnect();
   }
 
   static void setRoutingRules({required List<RoutingRule> rules}) {
     for (var rule in rules) {
       if (rule.appName != null) {
-        print('Routing rule for app ${rule.appName}: ${rule.action}');
+        _log('Routing rule for app ${rule.appName}: ${rule.action}');
       } else if (rule.domain != null) {
-        print('Routing rule for domain ${rule.domain}: ${rule.action}');
+        _log('Routing rule for domain ${rule.domain}: ${rule.action}');
       }
     }
   }
@@ -262,15 +187,15 @@ class VPNclientEngine {
   }) async {
     if (subscriptionIndex < 0 ||
         subscriptionIndex >= _subscriptionServers.length) {
-      print('Invalid subscription index');
+      _log('Invalid subscription index');
       return;
     }
     if (index < 0 || index >= _subscriptionServers[subscriptionIndex].length) {
-      print('Invalid server index');
+      _log('Invalid server index');
       return;
     }
     final serverAddress = _subscriptionServers[subscriptionIndex][index];
-    print('Pinging server: $serverAddress');
+    _log('Pinging server: $serverAddress');
 
     try {
       final ping = Ping(serverAddress, count: 3);
@@ -285,11 +210,11 @@ class VPNclientEngine {
           latencyInMs: latency,
         );
         _pingResultSubject.add(result);
-        print(
+        _log(
           'Ping result: sub=${result.subscriptionIndex}, server=${result.serverIndex}, latency=${result.latencyInMs} ms',
         );
       } else {
-        print('Ping failed: No response');
+        _log('Ping failed: No response');
         _pingResultSubject.add(
           PingResult(
             subscriptionIndex: subscriptionIndex,
@@ -299,7 +224,7 @@ class VPNclientEngine {
         ); // Indicate error with -1
       }
     } catch (e) {
-      print('Ping error: $e');
+      _log('Ping error: $e');
       _pingResultSubject.add(
         PingResult(
           subscriptionIndex: subscriptionIndex,
@@ -343,7 +268,7 @@ class VPNclientEngine {
   static Future<void> loadSubscriptions({
     required List<String> subscriptionLinks,
   }) async {
-    print('loadSubscriptions: ${subscriptionLinks.join(", ")}');
+    _log('loadSubscriptions: ${subscriptionLinks.join(", ")}');
     _subscriptions.addAll(subscriptionLinks);
     for (var element in subscriptionLinks) {
       addSubscription(subscriptionURL: element);
@@ -363,10 +288,10 @@ class VPNclientEngine {
   }
 
   static void setAutoConnect({required bool enable}) {
-    print('setAutoConnect: $enable');
+    _log('setAutoConnect: $enable');
   }
 
   static void setKillSwitch({required bool enable}) {
-    print('setKillSwitch: $enable');
+    _log('setKillSwitch: $enable');
   }
 }
