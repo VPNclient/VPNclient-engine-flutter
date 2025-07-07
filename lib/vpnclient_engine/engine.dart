@@ -241,28 +241,72 @@ class VPNclientEngine {
   }
 
   static List<Server> getServerList() {
-    //TODO:
-    //Fetches the list of available VPN servers.
-    return [
-      Server(
-        address: 'server1.com',
-        latency: 50,
-        location: 'USA',
-        isPreferred: true,
-      ),
-      Server(
-        address: 'server2.com',
-        latency: 100,
-        location: 'UK',
-        isPreferred: false,
-      ),
-      Server(
-        address: 'server3.com',
-        latency: 75,
-        location: 'Canada',
-        isPreferred: false,
-      ),
-    ];
+    List<Server> servers = [];
+    
+    _log('getServerList: processing ${_subscriptionServers.length} subscriptions');
+    
+    // Convert subscription servers to Server objects
+    for (int subIndex = 0; subIndex < _subscriptionServers.length; subIndex++) {
+      _log('getServerList: subscription $subIndex has ${_subscriptionServers[subIndex].length} servers');
+      
+      for (int serverIndex = 0; serverIndex < _subscriptionServers[subIndex].length; serverIndex++) {
+        final serverUrl = _subscriptionServers[subIndex][serverIndex];
+        _log('getServerList: processing server $serverIndex: $serverUrl');
+        
+        // Extract server information from URL
+        String address = serverUrl;
+        String? location;
+        
+        // Try to extract location from URL if possible
+        if (serverUrl.contains('@')) {
+          final parts = serverUrl.split('@');
+          if (parts.length > 1) {
+            final hostPart = parts[1].split(':')[0];
+            address = hostPart;
+            _log('getServerList: extracted host: $address');
+            
+            // Simple location detection based on common patterns
+            if (hostPart.contains('.us') || hostPart.contains('usa')) {
+              location = 'USA';
+            } else if (hostPart.contains('.uk') || hostPart.contains('gb')) {
+              location = 'UK';
+            } else if (hostPart.contains('.ca')) {
+              location = 'Canada';
+            } else if (hostPart.contains('.de')) {
+              location = 'Germany';
+            } else if (hostPart.contains('.nl')) {
+              location = 'Netherlands';
+            } else if (hostPart.contains('.jp')) {
+              location = 'Japan';
+            } else if (hostPart.contains('.sg')) {
+              location = 'Singapore';
+            } else {
+              location = 'Unknown';
+            }
+          }
+        } else {
+          // If no @ symbol, try to extract domain from the URL
+          if (serverUrl.contains('://')) {
+            final uri = Uri.parse(serverUrl);
+            address = uri.host;
+            _log('getServerList: extracted host from URI: $address');
+          }
+        }
+        
+        final server = Server(
+          address: address,
+          latency: null, // Will be updated by ping
+          location: location,
+          isPreferred: false,
+        );
+        
+        servers.add(server);
+        _log('getServerList: added server: ${server.address} (${server.location})');
+      }
+    }
+    
+    _log('getServerList: returning ${servers.length} servers from subscriptions');
+    return servers;
   }
 
   static Future<void> loadSubscriptions({
