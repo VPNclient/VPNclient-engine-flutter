@@ -13,7 +13,16 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'VPN Client Engine Demo',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
+        brightness: Brightness.light,
+      ),
+      darkTheme: ThemeData(
+        primarySwatch: Colors.blue,
+        useMaterial3: true,
+        brightness: Brightness.dark,
+      ),
       home: const VPNClientDemo(),
     );
   }
@@ -29,25 +38,27 @@ class VPNClientDemo extends StatefulWidget {
 class VPNClientDemoState extends State<VPNClientDemo> {
   ConnectionStatus _connectionStatus = ConnectionStatus.disconnected;
   String _currentServer = 'Not Connected';
-  String _pingResult = 'Not Pinging';
-  List<RoutingRule> _routingRules = [];
   List<Server> _servers = [];
+  List<String> _loadedSubscriptions = [];
   SessionStatistics _sessionStatistics = SessionStatistics(
     dataInBytes: 0,
     dataOutBytes: 0,
   );
+  bool _isLoading = false;
 
-  final TextEditingController _subscriptionUrlController =
-      TextEditingController();
-  final List<String> _loadedSubscriptions = [];
+  final TextEditingController _subscriptionUrlController = TextEditingController();
+  final PageController _pageController = PageController();
 
   @override
   void initState() {
     super.initState();
+    _initializeEngine();
+  }
+
+  void _initializeEngine() {
     VPNclientEngine.initialize();
     VPNclientEngine.onConnectionStatusChanged.listen(_updateConnectionStatus);
     VPNclientEngine.onPingResult.listen(_updatePingResult);
-    VPNclientEngine.onRoutingRulesApplied.listen(_updateRoutingRules);
     VPNclientEngine.onDataUsageUpdated.listen(_updateSessionStatistics);
   }
 
@@ -58,15 +69,17 @@ class VPNClientDemoState extends State<VPNClientDemo> {
   }
 
   void _updatePingResult(PingResult result) {
+    // Update server latency in the list
     setState(() {
-      _pingResult =
-          'Ping: sub=${result.subscriptionIndex}, server=${result.serverIndex}, latency=${result.latencyInMs} ms';
-    });
-  }
-
-  void _updateRoutingRules(List<RoutingRule> rules) {
-    setState(() {
-      _routingRules = rules;
+      if (result.serverIndex < _servers.length) {
+        // Create a new Server instance with updated latency
+        _servers[result.serverIndex] = Server(
+          address: _servers[result.serverIndex].address,
+          latency: result.latencyInMs,
+          location: _servers[result.serverIndex].location,
+          isPreferred: _servers[result.serverIndex].isPreferred,
+        );
+      }
     });
   }
 
@@ -76,174 +89,484 @@ class VPNClientDemoState extends State<VPNClientDemo> {
     });
   }
 
-  void _connectToServer() async {
-    await VPNclientEngine.connect(subscriptionIndex: 0, serverIndex: 0);
+  Future<void> _loadSubscription() async {
+    if (_subscriptionUrlController.text.isEmpty) {
+      _showSnackBar('Please enter a subscription URL');
+      return;
+    }
+
     setState(() {
-      _currentServer = 'Connecting...';
+      _isLoading = true;
+    });
+
+    try {
+      await VPNclientEngine.loadSubscriptions(
+        subscriptionLinks: [_subscriptionUrlController.text],
+      );
+      
+      setState(() {
+        _loadedSubscriptions.add(_subscriptionUrlController.text);
+        _subscriptionUrlController.clear();
+      });
+      
+      await _refreshServers();
+      _showSnackBar('Subscription loaded successfully');
+    } catch (e) {
+      _showSnackBar('Failed to load subscription: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _refreshServers() async {
+    setState(() {
+      _servers = VPNclientEngine.getServerList();
     });
   }
 
-  void _disconnectFromServer() async {
-    await VPNclientEngine.disconnect();
-    setState(() {
-      _currentServer = 'Not Connected';
-    });
-  }
-
-  void _pingServer() {
-    VPNclientEngine.pingServer(subscriptionIndex: 0, index: 0);
-    setState(() {
-      _pingResult = 'Pinging...';
-    });
-  }
-
-  void _loadServers() {
-    _servers = VPNclientEngine.getServerList();
-    setState(() {});
-  }
-
-  void _applyRoutingRules() {
-    List<RoutingRule> rules = [
-      RoutingRule(appName: "YouTube", action: "proxy"),
-      RoutingRule(appName: "google.com", action: "direct"),
-      RoutingRule(domain: "ads.com", action: "block"),
-    ];
-    VPNclientEngine.setRoutingRules(rules: rules);
-  }
-
-  void _loadSubscription() async {
-    if (_subscriptionUrlController.text.isEmpty) return;
+  Future<void> _connectToServer(int serverIndex) async {
+    if (_loadedSubscriptions.isEmpty) {
+      _showSnackBar('Please load a subscription first');
+      return;
+    }
 
     setState(() {
-      _loadedSubscriptions.add(_subscriptionUrlController.text);
+      _isLoading = true;
     });
-    await VPNclientEngine.loadSubscriptions(
-      subscriptionLinks: [_subscriptionUrlController.text],
+
+    try {
+      await VPNclientEngine.connect(subscriptionIndex: 0, serverIndex: serverIndex);
+      setState(() {
+        _currentServer = _servers[serverIndex].address;
+      });
+      _showSnackBar('Connecting to ${_servers[serverIndex].address}');
+    } catch (e) {
+      _showSnackBar('Failed to connect: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _disconnect() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await VPNclientEngine.disconnect();
+      setState(() {
+        _currentServer = 'Not Connected';
+      });
+      _showSnackBar('Disconnected');
+    } catch (e) {
+      _showSnackBar('Failed to disconnect: $e');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _pingServer(int serverIndex) {
+    VPNclientEngine.pingServer(subscriptionIndex: 0, index: serverIndex);
+  }
+
+  void _showSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('VPN Client Engine Demo')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: <Widget>[
-            Text('Connection Status: $_connectionStatus'),
-            Text('Current Server: $_currentServer'),
-            Text(_pingResult),
-            ElevatedButton(
-              onPressed: _connectToServer,
-              child: const Text('Connect'),
-            ),
-            ElevatedButton(
-              onPressed: _disconnectFromServer,
-              child: const Text('Disconnect'),
-            ),
-            const SizedBox(height: 20),
-            Text('Session Statistics'),
-            Text('Session Duration: ${_sessionStatistics.sessionDuration}'),
-            Text('Data In: ${_sessionStatistics.dataInBytes} bytes'),
-            Text('Data Out: ${_sessionStatistics.dataOutBytes} bytes'),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _pingServer,
-              child: const Text('Ping Server'),
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _loadServers,
-              child: const Text('Load Servers'),
-            ),
-            const SizedBox(height: 10),
-            Text('Loaded Servers:'),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _servers.length,
-              itemBuilder: (context, index) {
-                return ListTile(
-                  title: Text(_servers[index].address),
-                  subtitle: Text(
-                    'Latency: ${_servers[index].latency ?? 'N/A'}, Location: ${_servers[index].location ?? 'N/A'}',
+      appBar: AppBar(
+        title: const Text('VPN Client Engine'),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+      ),
+      body: PageView(
+        controller: _pageController,
+        children: [
+          _buildHomePage(),
+          _buildServersPage(),
+          _buildSettingsPage(),
+        ],
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: 0,
+        onTap: (index) => _pageController.animateToPage(
+          index,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+        ),
+        items: const [
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Servers'),
+          BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHomePage() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        children: [
+          // Connection Status Card
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: _getStatusColor(),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _getStatusText(),
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                    ],
                   ),
-                );
-              },
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _applyRoutingRules,
-              child: const Text('Apply Routing Rules'),
-            ),
-            const SizedBox(height: 10),
-            Text('Routing Rules Applied:'),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _routingRules.length,
-              itemBuilder: (context, index) {
-                final rule = _routingRules[index];
-                return ListTile(
-                  title: Text('Rule ${index + 1}'),
-                  subtitle: Text(
-                    'App Name: ${rule.appName ?? 'N/A'}, Domain: ${rule.domain ?? 'N/A'}, Action: ${rule.action}',
+                  const SizedBox(height: 8),
+                  Text(
+                    _currentServer,
+                    style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                );
-              },
-            ),
-            const SizedBox(height: 20),
-            Text('Load Subscription'),
-            TextField(
-              controller: _subscriptionUrlController,
-              decoration: const InputDecoration(
-                hintText: 'Enter subscription URL',
+                ],
               ),
             ),
-            const SizedBox(height: 10),
-            ElevatedButton(
-              onPressed: _loadSubscription,
-              child: const Text('Load Subscription'),
+          ),
+          const SizedBox(height: 16),
+          
+          // Connection Controls
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton.icon(
+                  onPressed: _connectionStatus == ConnectionStatus.connected 
+                    ? null 
+                    : _isLoading 
+                      ? null 
+                      : () => _connectToServer(0),
+                  icon: const Icon(Icons.power_settings_new),
+                  label: const Text('Connect'),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _connectionStatus == ConnectionStatus.connected 
+                    ? _disconnect 
+                    : null,
+                  icon: const Icon(Icons.stop),
+                  label: const Text('Disconnect'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          
+          // Statistics Card
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Session Statistics',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  _buildStatRow('Duration', _formatDuration(_sessionStatistics.sessionDuration)),
+                  _buildStatRow('Data In', _formatBytes(_sessionStatistics.dataInBytes)),
+                  _buildStatRow('Data Out', _formatBytes(_sessionStatistics.dataOutBytes)),
+                ],
+              ),
             ),
-            const SizedBox(height: 10),
-            Text('Loaded Subscriptions:'),
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: _loadedSubscriptions.length,
-              itemBuilder: (context, index) {
-                return ListTile(title: Text(_loadedSubscriptions[index]));
-              },
+          ),
+          const SizedBox(height: 24),
+          
+          // Subscription Management
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Subscription Management',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _subscriptionUrlController,
+                    decoration: const InputDecoration(
+                      hintText: 'Enter subscription URL',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _loadSubscription,
+                      child: _isLoading 
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Load Subscription'),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                VPNclientEngine.setAutoConnect(enable: true);
-              },
-              child: const Text('Enable auto connect'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildServersPage() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Available Servers',
+                style: Theme.of(context).textTheme.headlineSmall,
+              ),
+              TextButton.icon(
+                onPressed: _refreshServers,
+                icon: const Icon(Icons.refresh),
+                label: const Text('Refresh'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (_servers.isEmpty)
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.cloud_off,
+                      size: 64,
+                      color: Colors.grey[400],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'No servers available',
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Load a subscription to see available servers',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            Expanded(
+              child: ListView.builder(
+                itemCount: _servers.length,
+                itemBuilder: (context, index) {
+                  final server = _servers[index];
+                  final isConnected = _currentServer == server.address;
+                  
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    child: ListTile(
+                      leading: Icon(
+                        isConnected ? Icons.check_circle : Icons.cloud,
+                        color: isConnected ? Colors.green : null,
+                      ),
+                      title: Text(server.address),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (server.location != null)
+                            Text('Location: ${server.location}'),
+                          if (server.latency != null)
+                            Text('Latency: ${server.latency}ms'),
+                        ],
+                      ),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            onPressed: () => _pingServer(index),
+                            icon: const Icon(Icons.speed),
+                            tooltip: 'Ping Server',
+                          ),
+                          IconButton(
+                            onPressed: isConnected 
+                              ? null 
+                              : () => _connectToServer(index),
+                            icon: Icon(
+                              isConnected ? Icons.check : Icons.power_settings_new,
+                            ),
+                            tooltip: isConnected ? 'Connected' : 'Connect',
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
-            ElevatedButton(
-              onPressed: () {
-                VPNclientEngine.setAutoConnect(enable: false);
-              },
-              child: const Text('Disable auto connect'),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSettingsPage() {
+    return Padding(
+      padding: const EdgeInsets.all(16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Settings',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 16),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.auto_awesome),
+                  title: const Text('Auto Connect'),
+                  subtitle: const Text('Automatically connect on app launch'),
+                  trailing: Switch(
+                    value: false, // TODO: Implement state management
+                    onChanged: (value) {
+                      VPNclientEngine.setAutoConnect(enable: value);
+                    },
+                  ),
+                ),
+                ListTile(
+                  leading: const Icon(Icons.security),
+                  title: const Text('Kill Switch'),
+                  subtitle: const Text('Block internet when VPN disconnects'),
+                  trailing: Switch(
+                    value: false, // TODO: Implement state management
+                    onChanged: (value) {
+                      VPNclientEngine.setKillSwitch(enable: value);
+                    },
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: () {
-                VPNclientEngine.setKillSwitch(enable: true);
-              },
-              child: const Text('Enable kill switch'),
+          ),
+          const SizedBox(height: 16),
+          Card(
+            child: Column(
+              children: [
+                ListTile(
+                  leading: const Icon(Icons.route),
+                  title: const Text('Routing Rules'),
+                  subtitle: const Text('Configure app and domain routing'),
+                  onTap: () => _showRoutingRulesDialog(),
+                ),
+              ],
             ),
-            ElevatedButton(
-              onPressed: () {
-                VPNclientEngine.setKillSwitch(enable: false);
-              },
-              child: const Text('Disable kill switch'),
-            ),
-          ],
-        ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label),
+          Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+        ],
+      ),
+    );
+  }
+
+  Color _getStatusColor() {
+    switch (_connectionStatus) {
+      case ConnectionStatus.connected:
+        return Colors.green;
+      case ConnectionStatus.connecting:
+        return Colors.orange;
+      case ConnectionStatus.error:
+        return Colors.red;
+      case ConnectionStatus.disconnected:
+      default:
+        return Colors.grey;
+    }
+  }
+
+  String _getStatusText() {
+    switch (_connectionStatus) {
+      case ConnectionStatus.connected:
+        return 'Connected';
+      case ConnectionStatus.connecting:
+        return 'Connecting...';
+      case ConnectionStatus.error:
+        return 'Error';
+      case ConnectionStatus.disconnected:
+      default:
+        return 'Disconnected';
+    }
+  }
+
+  String _formatDuration(Duration? duration) {
+    if (duration == null) return '0:00';
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
+  }
+
+  String _formatBytes(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    if (bytes < 1024 * 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+    return '${(bytes / (1024 * 1024 * 1024)).toStringAsFixed(1)} GB';
+  }
+
+  void _showRoutingRulesDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Routing Rules'),
+        content: const Text('Routing rules configuration will be implemented here.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('OK'),
+          ),
+        ],
       ),
     );
   }
