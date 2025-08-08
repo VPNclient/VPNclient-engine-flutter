@@ -1,40 +1,228 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
-
-# IntelliJ related
-#*.iml
-*.ipr
-*.iws
-.idea/
-
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-.vscode/
+# =============================================================================
+# FLUTTER/DART RELATED
+# =============================================================================
 
 # Flutter/Dart/Pub related
-# Libraries should not include pubspec.lock, per https://dart.dev/guides/libraries/private-files#pubspeclock.
-/pubspec.lock
-**/doc/api/
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
+.pub-cache/
+.pub/
 build/
+**/doc/api/
+**/ios/Flutter/.last_build_id
 
-# Node.js
-node_modules
+# Libraries should not include pubspec.lock, per https://dart.dev/guides/libraries/private-files#pubspeclock.
+# Uncomment the following line if this is an application, not a library
+# /pubspec.lock
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# =============================================================================
+# ANDROID RELATED
+# =============================================================================
+
+# Android Studio
+*.iml
+*.ipr
+*.iws
+.idea/
+.gradle
+/local.properties
+/.idea/workspace.xml
+/.idea/libraries
+.DS_Store
+/build
+/captures
+.cxx
+
+# Android build artifacts
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
+**/android/build/
+**/android/.gradle/
+**/android/local.properties
+**/android/captures/
+
+# =============================================================================
+# IOS RELATED
+# =============================================================================
+
+# Xcode
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+!default.pbxuser
+!default.mode1v3
+!default.mode2v3
+!default.perspectivev3
+xcuserdata/
+*.moved-aside
+*.pyc
+*sync/
+Icon?
+.tags*
+
+# iOS build artifacts
+DerivedData/
+build/
+GeneratedPluginRegistrant.h
+GeneratedPluginRegistrant.m
+.generated/
+
+# Flutter iOS specific
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral/
+**/ios/Flutter/flutter_export_environment.sh
+
+# =============================================================================
+# MACOS RELATED
+# =============================================================================
+
+# macOS build artifacts
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+**/macos/Flutter/ephemeral/
+
+# =============================================================================
+# LINUX RELATED
+# =============================================================================
+
+# Linux build artifacts
+**/linux/flutter/generated_plugin_registrant.cc
+**/linux/flutter/generated_plugin_registrant.h
+
+# =============================================================================
+# WINDOWS RELATED
+# =============================================================================
+
+# Windows build artifacts
+**/windows/flutter/generated_plugin_registrant.cc
+**/windows/flutter/generated_plugin_registrant.h
+
+# =============================================================================
+# WEB RELATED
+# =============================================================================
+
+# Web build artifacts
+**/web/firebase_options.dart
+
+# =============================================================================
+# DEVELOPMENT TOOLS
+# =============================================================================
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# VS Code
+.vscode/
+
+# Atom
+.atom/
+
+# Vim
+*.swp
+*.swo
+
+# =============================================================================
+# SYSTEM FILES
+# =============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# =============================================================================
+# MISC
+# =============================================================================
+
+# Logs
+*.log
+*.log.*
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Python (if any scripts are used)
+*.pyc
+__pycache__/
+
+# Node.js (if any build scripts use Node)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# FVM
-.fvm
+# FVM (Flutter Version Management)
+.fvm/
+
+# Migration working directory
+migrate_working_dir/
+
+# Version control
+.svn/
+.history/
+
+# Swift Package Manager
+.swiftpm/
+
+# =============================================================================
+# PLUGIN SPECIFIC
+# =============================================================================
+
+# Generated plugin files
+**/GeneratedPluginRegistrant.*
+
+# Build artifacts for all platforms
+**/build/
+**/dist/
+
+# Test coverage
+coverage/
+*.lcov
+
+# Performance profiling
+*.trace
+
+# =============================================================================
+# SECURITY
+# =============================================================================
+
+# API keys and secrets
+**/google-services.json
+**/GoogleService-Info.plist
+**/firebase_options.dart
+
+# Certificates and keys
+*.p12
+*.pem
+*.key
+*.crt
+*.cer
