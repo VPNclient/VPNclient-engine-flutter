@@ -39,6 +39,24 @@ public class VpnclientEngineFlutterPlugin: NSObject, FlutterPlugin {
             result("iOS " + UIDevice.current.systemVersion)
         case "checkSystemPermission":
             self.checkSystemPermission(result: result)
+        case "pingServer":
+            guard let arguments = call.arguments as? [String: Any],
+                  let config = arguments["config"] as? String,
+                  let url = arguments["url"] as? String,
+                  let timeout = arguments["timeout"] as? Int else {
+                result(FlutterError(code: "ARGUMENT_ERROR", message: "Invalid arguments for ping", details: nil))
+                return
+            }
+            self.pingServer(config: config, url: url, timeout: timeout, result: result)
+        case "getXrayVersion":
+            self.getXrayVersion(result: result)
+        case "testXrayConfig":
+            guard let arguments = call.arguments as? [String: Any],
+                  let config = arguments["config"] as? String else {
+                result(FlutterError(code: "ARGUMENT_ERROR", message: "Invalid arguments for test", details: nil))
+                return
+            }
+            self.testXrayConfig(config: config, result: result)
         default:
             result(FlutterMethodNotImplemented)
         }
@@ -51,10 +69,50 @@ public class VpnclientEngineFlutterPlugin: NSObject, FlutterPlugin {
         case "singbox":
             startSingBox(config: config, result: result)
         case "libxray":
-            // TODO: Реализовать запуск libxray через NETunnelProviderManager или другой механизм
-            result(FlutterError(code: "NOT_IMPLEMENTED", message: "libxray support is not implemented yet", details: nil))
+            startLibXray(config: config, result: result)
         default:
             result(FlutterError(code: "UNKNOWN_ENGINE", message: "Unknown engine: \(engine)", details: nil))
+        }
+    }
+    
+    private func startLibXray(config: String, result: @escaping FlutterResult) {
+        // Get documents directory for dat files
+        let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
+        let datDir = documentsPath + "/libxray_dat"
+        
+        // Create dat directory if it doesn't exist
+        let fileManager = FileManager.default
+        if !fileManager.fileExists(atPath: datDir) {
+            try? fileManager.createDirectory(atPath: datDir, withIntermediateDirectories: true)
+        }
+        
+        // Save config to temporary file
+        let configPath = documentsPath + "/xray_config.json"
+        do {
+            try config.write(toFile: configPath, atomically: true, encoding: .utf8)
+        } catch {
+            result(FlutterError(code: "CONFIG_SAVE_ERROR", message: "Failed to save config: \(error.localizedDescription)", details: nil))
+            return
+        }
+        
+        // Test configuration first
+        let libXray = LibXrayWrapper.shared()
+        let testResult = libXray.testXray(datDir: datDir, configPath: configPath)
+        
+        if !testResult {
+            result(FlutterError(code: "CONFIG_TEST_ERROR", message: "Configuration test failed", details: nil))
+            return
+        }
+        
+        // Start Xray
+        let startResult = libXray.runXray(datDir: datDir, configPath: configPath)
+        
+        if startResult {
+            self.isVpnRunning = true
+            self.sendConnectionStatus(status: "connected")
+            result(true)
+        } else {
+            result(FlutterError(code: "START_ERROR", message: "Failed to start LibXray", details: nil))
         }
     }
 
@@ -109,6 +167,22 @@ public class VpnclientEngineFlutterPlugin: NSObject, FlutterPlugin {
     }
 
     private func disconnect(result: @escaping FlutterResult) {
+        // Handle LibXray disconnect
+        if self.currentEngine == "libxray" {
+            let libXray = LibXrayWrapper.shared()
+            let stopResult = libXray.stopXray()
+            
+            if stopResult {
+                self.isVpnRunning = false
+                self.sendConnectionStatus(status: "disconnected")
+                result(true)
+            } else {
+                result(FlutterError(code: "STOP_ERROR", message: "Failed to stop LibXray", details: nil))
+            }
+            return
+        }
+        
+        // Handle other engines (singbox, etc.)
         NETunnelProviderManager.loadAllFromPreferences { managers, error in
             if let error = error {
                 result(FlutterError(code: "LOAD_ERROR", message: "Failed to load VPN configurations: \(error.localizedDescription)", details: nil))
@@ -188,6 +262,56 @@ public class VpnclientEngineFlutterPlugin: NSObject, FlutterPlugin {
         } else {
             result("disconnected")
         }
+    }
+    
+    // MARK: - LibXray Methods
+    
+    private func pingServer(config: String, url: String, timeout: Int, result: @escaping FlutterResult) {
+        let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
+        let datDir = documentsPath + "/libxray_dat"
+        let configPath = documentsPath + "/xray_config_ping.json"
+        
+        // Save config to temporary file
+        do {
+            try config.write(toFile: configPath, atomically: true, encoding: .utf8)
+        } catch {
+            result(FlutterError(code: "CONFIG_SAVE_ERROR", message: "Failed to save config: \(error.localizedDescription)", details: nil))
+            return
+        }
+        
+        let libXray = LibXrayWrapper.shared()
+        let pingDelay = libXray.ping(datDir: datDir, configPath: configPath, timeout: timeout, url: url, proxy: "")
+        
+        if pingDelay >= 0 {
+            result(pingDelay)
+        } else {
+            result(FlutterError(code: "PING_ERROR", message: "Failed to ping server", details: nil))
+        }
+    }
+    
+    private func getXrayVersion(result: @escaping FlutterResult) {
+        let libXray = LibXrayWrapper.shared()
+        let version = libXray.getXrayVersion()
+        result(version)
+    }
+    
+    private func testXrayConfig(config: String, result: @escaping FlutterResult) {
+        let documentsPath = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]
+        let datDir = documentsPath + "/libxray_dat"
+        let configPath = documentsPath + "/xray_config_test.json"
+        
+        // Save config to temporary file
+        do {
+            try config.write(toFile: configPath, atomically: true, encoding: .utf8)
+        } catch {
+            result(FlutterError(code: "CONFIG_SAVE_ERROR", message: "Failed to save config: \(error.localizedDescription)", details: nil))
+            return
+        }
+        
+        let libXray = LibXrayWrapper.shared()
+        let testResult = libXray.testXray(datDir: datDir, configPath: configPath)
+        
+        result(testResult)
     }
 }
 

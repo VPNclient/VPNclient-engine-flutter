@@ -1,4 +1,5 @@
 import 'package:vpnclient_engine_flutter/vpnclient_engine_flutter.dart';
+import 'package:vpnclient_engine_flutter/vpnclient_engine/platform_base.dart';
 
 // Simple logger for production code
 void _log(String message) {

@@ -1,3 +1,5 @@
+import 'engine_factory.dart';
+
 /// Supported VPN engine types
 enum EngineType {
   libxray,
