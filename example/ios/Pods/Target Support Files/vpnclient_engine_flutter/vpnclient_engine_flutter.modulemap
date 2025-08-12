@@ -1,0 +1,6 @@
+framework module vpnclient_engine_flutter {
+  umbrella header "vpnclient_engine_flutter-umbrella.h"
+
+  export *
+  module * { export * }
+}

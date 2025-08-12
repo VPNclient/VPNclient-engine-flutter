@@ -1,0 +1,4 @@
+${PODS_ROOT}/Target Support Files/Pods-Runner/Pods-Runner-frameworks.sh
+${BUILT_PRODUCTS_DIR}/flutter_v2ray/flutter_v2ray.framework
+${BUILT_PRODUCTS_DIR}/integration_test/integration_test.framework
+${BUILT_PRODUCTS_DIR}/vpnclient_engine_flutter/vpnclient_engine_flutter.framework

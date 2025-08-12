@@ -1,0 +1,32 @@
+{
+  "name": "vpnclient_engine_flutter",
+  "version": "0.0.1",
+  "summary": "A Flutter plugin for VPN client engine.",
+  "homepage": "https://example.com",
+  "license": {
+    "type": "MIT"
+  },
+  "authors": {
+    "Your Name": "your.email@example.com"
+  },
+  "source": {
+    "path": "."
+  },
+  "platforms": {
+    "ios": "15.0"
+  },
+  "dependencies": {
+    "Flutter": []
+  },
+  "source_files": "Classes/**/*",
+  "vendored_frameworks": "Frameworks/LibXray.xcframework",
+  "resource_bundles": {
+    "vpnclient_engine_flutter": [
+      "Resources/**/*"
+    ]
+  },
+  "pod_target_xcconfig": {
+    "FRAMEWORK_SEARCH_PATHS": "$(inherited) $(PODS_ROOT)/../.symlinks/plugins/vpnclient_engine_flutter/ios/Frameworks",
+    "OTHER_LDFLAGS": "$(inherited) -framework LibXray"
+  }
+}

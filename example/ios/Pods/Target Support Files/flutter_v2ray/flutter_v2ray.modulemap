@@ -1,0 +1,6 @@
+framework module flutter_v2ray {
+  umbrella header "flutter_v2ray-umbrella.h"
+
+  export *
+  module * { export * }
+}

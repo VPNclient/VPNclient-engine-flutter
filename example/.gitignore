@@ -1,37 +1,19 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
-
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
-.idea/
-
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# =============================================================================
+# FLUTTER APP SPECIFIC
+# =============================================================================
 
 # Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
 .pub-cache/
 .pub/
-/build/
+build/
+**/doc/api/
+**/ios/Flutter/.last_build_id
+
+# Include pubspec.lock for applications (not libraries)
+# /pubspec.lock
 
 # Symbolication related
 app.*.symbols
@@ -39,7 +21,158 @@ app.*.symbols
 # Obfuscation related
 app.*.map.json
 
+# =============================================================================
+# ANDROID APP SPECIFIC
+# =============================================================================
+
 # Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+**/android/app/debug
+**/android/app/profile
+**/android/app/release
+
+# Android build artifacts
+**/android/build/
+**/android/.gradle/
+**/android/local.properties
+**/android/captures/
+
+# =============================================================================
+# IOS APP SPECIFIC
+# =============================================================================
+
+# iOS build artifacts
+**/ios/build/
+**/ios/DerivedData/
+**/ios/GeneratedPluginRegistrant.h
+**/ios/GeneratedPluginRegistrant.m
+
+# Flutter iOS specific
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral/
+**/ios/Flutter/flutter_export_environment.sh
+
+# =============================================================================
+# MACOS APP SPECIFIC
+# =============================================================================
+
+# macOS build artifacts
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+**/macos/Flutter/ephemeral/
+
+# =============================================================================
+# LINUX APP SPECIFIC
+# =============================================================================
+
+# Linux build artifacts
+**/linux/flutter/generated_plugin_registrant.cc
+**/linux/flutter/generated_plugin_registrant.h
+
+# =============================================================================
+# WINDOWS APP SPECIFIC
+# =============================================================================
+
+# Windows build artifacts
+**/windows/flutter/generated_plugin_registrant.cc
+**/windows/flutter/generated_plugin_registrant.h
+
+# =============================================================================
+# WEB APP SPECIFIC
+# =============================================================================
+
+# Web build artifacts
+**/web/firebase_options.dart
+
+# =============================================================================
+# DEVELOPMENT TOOLS
+# =============================================================================
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# VS Code
+.vscode/
+
+# =============================================================================
+# SYSTEM FILES
+# =============================================================================
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
+
+# =============================================================================
+# MISC
+# =============================================================================
+
+# Logs
+*.log
+*.log.*
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Python (if any scripts are used)
+*.pyc
+__pycache__/
+
+# Node.js (if any build scripts use Node)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# FVM (Flutter Version Management)
+.fvm/
+
+# =============================================================================
+# APP SPECIFIC
+# =============================================================================
+
+# Test coverage
+coverage/
+*.lcov
+
+# Performance profiling
+*.trace
+
+# App-specific build artifacts
+**/build/
+**/dist/
+
+# =============================================================================
+# SECURITY
+# =============================================================================
+
+# API keys and secrets
+**/google-services.json
+**/GoogleService-Info.plist
+**/firebase_options.dart
+
+# Certificates and keys
+*.p12
+*.pem
+*.key
+*.crt
+*.cer

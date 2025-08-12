@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:vpnclient_engine_flutter/vpnclient_engine_flutter.dart';
-import 'package:vpnclient_engine_flutter/vpnclient_engine/engine.dart';
+import 'vpn_test.dart';
+import 'vpn_state_example.dart';
 
 void main() {
   runApp(const MyApp());
@@ -78,6 +79,7 @@ class VPNClientDemoState extends State<VPNClientDemo> {
           latency: result.latencyInMs,
           location: _servers[result.serverIndex].location,
           isPreferred: _servers[result.serverIndex].isPreferred,
+          config: _servers[result.serverIndex].config,
         );
       }
     });
@@ -195,6 +197,8 @@ class VPNClientDemoState extends State<VPNClientDemo> {
           _buildHomePage(),
           _buildServersPage(),
           _buildSettingsPage(),
+          const VpnTestPage(),
+          const VpnStateExample(),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -208,6 +212,8 @@ class VPNClientDemoState extends State<VPNClientDemo> {
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.list), label: 'Servers'),
           BottomNavigationBarItem(icon: Icon(Icons.settings), label: 'Settings'),
+          BottomNavigationBarItem(icon: Icon(Icons.science), label: 'Test'),
+          BottomNavigationBarItem(icon: Icon(Icons.vpn_key), label: 'New API'),
         ],
       ),
     );

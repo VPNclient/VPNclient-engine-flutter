@@ -1,0 +1,3 @@
+${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/flutter_v2ray.framework
+${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/integration_test.framework
+${TARGET_BUILD_DIR}/${FRAMEWORKS_FOLDER_PATH}/vpnclient_engine_flutter.framework
