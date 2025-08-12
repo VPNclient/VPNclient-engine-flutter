@@ -147,9 +147,10 @@ class VpnclientEngineFlutter {
 
   // Static methods for backward compatibility
   /// Initialize the plugin (static method)
-  static Future<void> initialize() async {
+  static Future<void> initialize({VpnStatusCallback? onStatusChanged}) async {
     _log('Initializing VpnclientEngineFlutter plugin (static)');
-    // Plugin is ready to use
+    instance.setStatusCallback(onStatusChanged);
+    await instance.initialize();
   }
 
   /// Get platform version
@@ -175,46 +176,46 @@ class VpnclientEngineFlutter {
 
   /// Connect using specified engine (static method)
   static Future<bool> connect(EngineType engine, String config) async {
-    return await client.connect(engine, config);
+    return await instance.connect(engine, config);
   }
 
   /// Disconnect current connection (static method)
   static Future<void> disconnect() async {
-    await client.disconnect();
+    await instance.disconnect();
   }
 
   /// Test configuration with specified engine (static method)
   static Future<bool> testConfig(EngineType engine, String config) async {
-    return await client.testConfig(engine, config);
+    return await instance.testConfig(engine, config);
   }
 
   /// Ping server with specified engine (static method)
   static Future<int> ping(EngineType engine, String config, String url, {int timeout = 10}) async {
-    return await client.ping(engine, config, url, timeout: timeout);
+    return await instance.ping(engine, config, url, timeout: timeout);
   }
 
   /// Get version of specified engine (static method)
   static Future<String> getVersion(EngineType engine) async {
-    return await client.getVersion(engine);
+    return await instance.getVersion(engine);
   }
 
   /// Get current connection status (static method)
   static Future<ConnectionStatus> getConnectionStatus() async {
-    return await client.getConnectionStatus();
+    return await instance.getConnectionStatus();
   }
 
   /// Request permissions for specified engine (static method)
   static Future<bool> requestPermissions(EngineType engine) async {
-    return await client.requestPermissions(engine);
+    return await instance.requestPermissions(engine);
   }
 
   /// Get current engine (static method)
   static VpnEngine? getCurrentEngine() {
-    return client.currentEngine;
+    return instance.getCurrentEngine();
   }
 
   /// Get current engine type (static method)
   static EngineType? getCurrentEngineType() {
-    return client.currentEngineType;
+    return instance.getCurrentEngineType();
   }
 }
