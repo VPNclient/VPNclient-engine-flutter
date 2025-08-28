@@ -52,6 +52,12 @@ app.*.map.json
 *.aab
 *.so
 
+# Large binary libraries and data files
+**/android/libs/*.aar
+**/android/src/main/assets/*.dat
+**/ios/Resources/dat/*.dat
+**/ios/Frameworks/*.xcframework
+
 # =============================================================================
 # IOS RELATED
 # =============================================================================
