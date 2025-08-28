@@ -27,9 +27,7 @@ class LibXrayEngine implements VpnEngine {
       if (Platform.isIOS || Platform.isMacOS) {
         return await _iosEngine.connectLibXray(config: config);
       } else if (Platform.isAndroid) {
-        // For Android, we'll use a simple implementation for now
-        print('LibXray connect on Android: $config');
-        return true; // Placeholder
+        return await _androidEngine.connectLibXray(config: config);
       }
       return false;
     } catch (e) {
@@ -65,9 +63,7 @@ class LibXrayEngine implements VpnEngine {
       if (Platform.isIOS || Platform.isMacOS) {
         return await _iosEngine.testXrayConfig(config: config);
       } else if (Platform.isAndroid) {
-        // For Android, we'll use a simple implementation for now
-        print('LibXray test config on Android: $config');
-        return true; // Placeholder
+        return await _androidEngine.testXrayConfig(config: config);
       }
       return false;
     } catch (e) {
@@ -90,9 +86,11 @@ class LibXrayEngine implements VpnEngine {
           timeout: timeout,
         );
       } else if (Platform.isAndroid) {
-        // For Android, we'll use a simple implementation for now
-        print('LibXray ping on Android: $config -> $url');
-        return 100; // Placeholder latency
+        return await _androidEngine.pingServer(
+          config: config,
+          url: url,
+          timeout: timeout,
+        );
       }
       return -1;
     } catch (e) {
@@ -111,7 +109,7 @@ class LibXrayEngine implements VpnEngine {
       if (Platform.isIOS || Platform.isMacOS) {
         return await _iosEngine.getXrayVersion();
       } else if (Platform.isAndroid) {
-        return 'Android LibXray v1.0'; // Placeholder
+        return await _androidEngine.getXrayVersion();
       }
       return 'Unknown';
     } catch (e) {
@@ -141,8 +139,18 @@ class LibXrayEngine implements VpnEngine {
             return ConnectionStatus.disconnected;
         }
       } else if (Platform.isAndroid) {
-        // For Android, we'll use a simple implementation for now
-        return ConnectionStatus.disconnected; // Placeholder
+        final status = await _androidEngine.getConnectionStatus();
+        switch (status) {
+          case 'connected':
+            return ConnectionStatus.connected;
+          case 'connecting':
+            return ConnectionStatus.connecting;
+          case 'error':
+            return ConnectionStatus.error;
+          case 'disconnected':
+          default:
+            return ConnectionStatus.disconnected;
+        }
       }
       return ConnectionStatus.disconnected;
     } catch (e) {
@@ -161,9 +169,7 @@ class LibXrayEngine implements VpnEngine {
       if (Platform.isIOS || Platform.isMacOS) {
         return await _iosEngine.requestPermissions();
       } else if (Platform.isAndroid) {
-        // For Android, we'll use a simple implementation for now
-        print('LibXray request permissions on Android');
-        return true; // Placeholder
+        return await _androidEngine.requestPermissions();
       }
       return false;
     } catch (e) {

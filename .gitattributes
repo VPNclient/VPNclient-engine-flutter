@@ -1,3 +1,1 @@
 ios/Frameworks/LibXray.xcframework/**/LibXray filter=lfs diff=lfs merge=lfs -text
-*.apk filter=lfs diff=lfs merge=lfs -text
-*.so filter=lfs diff=lfs merge=lfs -text
